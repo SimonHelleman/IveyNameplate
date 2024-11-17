@@ -8,7 +8,7 @@ class Nameplate
 public:
     Nameplate(Display& front, Display& rear);
 
-    void Update();
+    void Run();
 
 private:
     Display& m_frontDisplay;

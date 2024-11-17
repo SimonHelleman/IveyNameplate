@@ -18,15 +18,15 @@ FetchContent_MakeAvailable(SFML)
 
 set(SOURCE_FILES
     src/Nameplate.cpp
-    src/Platform/SFML/SFMLDisplay.cpp
-    src/Platform/SFML/Main.cpp
+    src/Platform/SFML/DisplaySFML.cpp
+    src/Platform/SFML/EntrySFML.cpp
 )
 
 set(HEADER_FILES
     src/Display.h
     src/Nameplate.h
     src/Util/Color.h
-    src/Platform/SFML/SFMLDisplay.h
+    src/Platform/SFML/DisplaySFML.h
 )
 
 add_executable(nameplate ${SOURCE_FILES} ${HEADER_FILES})

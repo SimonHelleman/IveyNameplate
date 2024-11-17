@@ -6,7 +6,7 @@ namespace nameplate
 {
 
 
-class SFMLDisplay : public Display
+class DisplaySFML : public Display
 {
 public:
     struct Config
@@ -20,7 +20,7 @@ public:
     };
 
 public:
-    SFMLDisplay(unsigned int width, unsigned int height, const char* name, const Config& config);
+    DisplaySFML(unsigned int width, unsigned int height, const char* name, const Config& config);
 
     void HandleEvents() override;
     void DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const char* text) override;
