@@ -27,6 +27,7 @@ public:
         return m_name;
     }
 
+    // To be implemented by specific implementation
     virtual void HandleEvents() = 0;
     virtual void DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const char* text) = 0;
     virtual void Clear(RGB color) = 0;

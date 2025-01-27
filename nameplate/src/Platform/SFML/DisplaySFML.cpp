@@ -13,7 +13,7 @@ DisplaySFML::DisplaySFML(unsigned int width, unsigned int height, const char* na
 
 void DisplaySFML::HandleEvents()
 {
-    // TODO figure a way to handle window close properly
+    // End the app if a user closes the window
     if (!m_window.isOpen())
     {
         exit(0);
@@ -35,12 +35,15 @@ void DisplaySFML::DrawText(unsigned int posX, unsigned int posY, unsigned int si
 {
     const sf::Color fill(color.r, color.g, color.b, color.a);
     
+    // Conifure text
     sf::Text txt;
     txt.setString(text);
     txt.setFont(m_config.textFont);
+    txt.setStyle(sf::Text::Bold);
     txt.setCharacterSize(size);
     txt.setFillColor(fill);
 
+    // Find origin
     const sf::FloatRect rect = txt.getLocalBounds();
     txt.setOrigin(rect.left + rect.width / 2.0f, rect.top + rect.height / 2.0f);
     txt.setPosition(posX, posY);
@@ -55,6 +58,7 @@ void DisplaySFML::Clear(RGB color)
 
 void DisplaySFML::Show()
 {
+    // Push image to display
     m_window.display();
 }
 

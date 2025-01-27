@@ -19,8 +19,8 @@ void Nameplate::Run()
 
         const unsigned int centerX = m_frontDisplay.Width() / 2;
         const unsigned int centerY = m_frontDisplay.Height() / 2;
-        constexpr unsigned int NAME_FONT_SIZE = 216;
-        const char* name = "Kyle Maclean";
+        constexpr unsigned int NAME_FONT_SIZE = 400;
+        const char* name = "Kyle";
         const char* course = "BUS 1299E";
 
         m_frontDisplay.DrawText(centerX, centerY, NAME_FONT_SIZE, {}, name);
