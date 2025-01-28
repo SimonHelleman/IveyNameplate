@@ -13,6 +13,14 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
+FetchContent_Declare(asio
+        GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+        GIT_TAG asio-1-30-2
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(asio)
+
 #file(GLOB_RECURSE SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/**/*.cpp)
 #file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/src/**/*.h)
 
@@ -30,6 +38,9 @@ set(HEADER_FILES
 )
 
 add_executable(nameplate ${SOURCE_FILES} ${HEADER_FILES})
+#target_include_directories(nameplate PRIVATE ${CMAKE_SOURCE_DIR}/dependencies/asio-1.30.2/include)
+target_include_directories(nameplate PRIVATE ${asio_SOURCE_DIR}/asio/include)
+
 target_link_libraries(nameplate PRIVATE sfml-graphics)
 target_compile_features(nameplate PRIVATE cxx_std_17)
 
