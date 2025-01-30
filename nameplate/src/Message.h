@@ -18,17 +18,17 @@ struct Header
     {
     }
 
-    uint32_t clientId;
-    uint16_t payloadSize;
+    uint32_t clientId; // only for messages from server... or server is clientid 0???
     PacketType packetType;
+    uint16_t payloadSize;
 };
 static_assert(sizeof(Header) == 8);
 
 class Message
 {
 public:
-    Message(uint32_t clientId, PacketType type)
-        : m_header(clientId, type, 0)
+    Message(PacketType type)
+        : m_header(0, type, 0)
     {
     }
 
@@ -57,8 +57,21 @@ public:
         return m_payload.data();
     }
 
+public:
+
     void Push(const void* data, uint16_t size);
     void Pop(void* buffer, size_t bufferSz, uint16_t size);
+
+public:
+
+    std::string AsString() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Message& msg)
+    {
+        os << msg.AsString();
+        return os;
+    }
+
 
 private:
     Header m_header;

@@ -1,6 +1,5 @@
 #pragma once
-
-class Message;
+#include "Message.h"
 
 namespace nameplate
 {

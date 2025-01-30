@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Message.h"
 
 namespace nameplate
@@ -33,6 +34,38 @@ void Message::Pop(void* buffer, size_t bufferSz, uint16_t size)
     m_payload.resize(m_payload.size() - size);
 
     m_header.payloadSize = m_payload.size();
+}
+
+std::string Message::AsString() const
+{
+    std::stringstream ss;
+
+    constexpr size_t BUF_SZ = 16;
+    char buf[BUF_SZ];
+
+    ss << "************************ Message ************************\n";
+
+    snprintf(buf, BUF_SZ, "%02d", (uint8_t)m_header.packet_type);
+    ss << "ID: " << buf << "                                 ";
+    snprintf(buf, BUF_SZ, "%04d", m_header.payload_size);
+    ss << "Payload Size: " << buf << '\n';
+    ss << "---------------------------------------------------------\n";
+
+    for (int i = 0; i < m_payload.size(); ++i)
+    {
+        if (i % 16 == 0)
+        {
+            if (i > 0) ss << "\n";
+            snprintf(buf, BUF_SZ, "%08x: ", i);
+            ss << buf;
+        }
+
+        snprintf(buf, BUF_SZ, "%02x ", m_payload[i]);
+        ss << buf;
+    }
+
+    ss << "\n*********************************************************\n";
+    return ss.str();
 }
 
 
