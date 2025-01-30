@@ -10,9 +10,9 @@ namespace nameplate
 {
 
 EccelRFID::EccelRFID(const char* serialPort)
-    : m_port(serialPort), m_serial(0), m_serialBuf(UART_BUFFER_SZ)
+    : m_serial(0), m_serialBuf(UART_BUFFER_SZ)
 {
-    m_serial = open(serialFD, O_RDWR | O_NOCTTY | O_NDELAY);
+    m_serial = open(serialPort, O_RDWR | O_NOCTTY | O_NDELAY);
 
     if (m_serial == -1)
     {
@@ -63,9 +63,9 @@ int EccelRFID::ReadUART() const
     return bytesRead;
 }
 
-void EccelRFID::WriteUART(const char* data)
+void EccelRFID::WriteUART(const uint8_t* data, size_t dataLen)
 {
-    write(m_serial, data, strlen(data)) const;
+    write(m_serial, data, dataLen) const;
 }
 
 }
