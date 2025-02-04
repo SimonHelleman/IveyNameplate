@@ -45,9 +45,9 @@ std::string Message::AsString() const
 
     ss << "************************ Message ************************\n";
 
-    snprintf(buf, BUF_SZ, "%02d", (uint8_t)m_header.packet_type);
+    snprintf(buf, BUF_SZ, "%02d", (uint8_t)m_header.packetType);
     ss << "ID: " << buf << "                                 ";
-    snprintf(buf, BUF_SZ, "%04d", m_header.payload_size);
+    snprintf(buf, BUF_SZ, "%04d", m_header.payloadSize);
     ss << "Payload Size: " << buf << '\n';
     ss << "---------------------------------------------------------\n";
 
