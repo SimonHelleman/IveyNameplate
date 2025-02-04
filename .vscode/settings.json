@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.embeddedhtml": "html",
-        "xiosbase": "cpp",
-        "type_traits": "cpp",
-        "cstdint": "cpp",
-        "string": "cpp"
-    }
-}
