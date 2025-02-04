@@ -56,7 +56,7 @@ public:
 private:
 
     int ReadUART() const;
-    void EccelRFID::WriteUART(const uint8_t* data, size_t dataLen)
+    void WriteUART(const uint8_t* data, size_t dataLen)
 
 
 private:
