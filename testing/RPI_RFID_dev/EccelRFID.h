@@ -1,9 +1,38 @@
 #pragma once
 #include <memory>
+#include <string>
 #include <vector>
+#include <exception>
 
 namespace nameplate
-{    
+{
+class UARTError : public std::exception
+{
+public:
+    enum class Type
+    {
+        Read,
+        Write
+    }
+public:
+    UARTError(Type type)
+    {
+        m_what = "[UART]There was an error ";
+        m_what += type == Type::Read ? "reading from " : "writing to ";
+        m_what += "UART.".
+    }
+
+
+    const char* what() const override noexcept
+    {
+        return m_what.c_str();
+    }
+private:
+    std::string m_what;
+};
+
+
+// Datasheet: https://www.eccel.co.uk/wp-content/downloads/RFID-B1-User-Manual.pdf
 class EccelRFID
 {
 public:
@@ -48,6 +77,21 @@ public:
         UserMemoryStart = 0x0258
     }; // And more for passwords.... add if needed
 
+    enum class Response: uint8_t
+    {
+        ACK = 0x0,
+        InvalidCommand = 0x01,
+        InvalidCommandParam = 0x02,
+        ProtocolError = 0x03,
+        MemoryError = 0x04,
+        SystemError = 0x05,
+        ModuleTimeout = 0x06,
+        Overflow = 0x07,
+        AsyncPacket = 0x08,
+        Busy = 0x09
+        SystemStart = 0x0a
+    };
+
 public:
     EccelRFID(const char* serialPort);
     ~EccelRFID();
@@ -62,8 +106,10 @@ public:
 
 //private:
 public:
-    ssize_t ReadUART() const;
-    ssize_t WriteUART(const void* data, size_t dataLen) const;
+    size_t ReadUART() const;
+    size_t WriteUART(const void* data, size_t dataLen) const;
+
+    Packet SendCommand(Command command) const;
 
 private:
 
@@ -72,6 +118,8 @@ private:
     public:
         Packet(const void* data, uint16_t len);
         Packet(const std::vector<uint8_t> packetData);
+        Packet(std::vector<uint8_t>&& packetData);
+
 
         std::vector<uint8_t> Data() const;
         
@@ -83,11 +131,12 @@ private:
     private:
         std::vector<uint8_t> m_packet;
     };
-    //static std::vector<uint8_t> MakePacket(const void* data, uint16_t len);
 
 private:
     int m_serial;
     std::unique_ptr<uint8_t[]> m_serialBuf;
+    size_t m_serialBufferLen;
+    Packet m_responsePacket;
 
 private:
     static constexpr size_t UART_BUFFER_SZ = 1024;

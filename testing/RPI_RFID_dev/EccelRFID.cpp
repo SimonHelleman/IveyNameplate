@@ -76,7 +76,7 @@ namespace nameplate
 {
 
 EccelRFID::EccelRFID(const char* serialPort)
-    : m_serial(0), m_serialBuf(std::make_unique<uint8_t[]>(UART_BUFFER_SZ))
+    : m_serial(0), m_serialBuf(std::make_unique<uint8_t[]>(UART_BUFFER_SZ)), m_serialBufferLen(0)
 {
     m_serial = open(serialPort, O_RDWR | O_NOCTTY);
 
@@ -121,19 +121,70 @@ uint32_t EccelRFID::GetId() const
     return 0;
 }
 
-ssize_t EccelRFID::ReadUART() const
+// TODO go back to size_t since throwing the except
+size_t EccelRFID::ReadUART() const
 {
     memset(m_serialBuf.get(), 0, UART_BUFFER_SZ * sizeof(char));
 
     const ssize_t bytesRead = read(m_serial, m_serialBuf.get(), UART_BUFFER_SZ - 1);
 
-    return bytesRead;
+    if (bytesRead == -1)
+    {
+        throw UARTError(UARTError::Type::Read);
+    }
+
+    m_serialBufferLen = bytesRead;
+
+    return static_cast<size_t>(bytesRead);
 }
 
-ssize_t EccelRFID::WriteUART(const void* data, size_t dataLen) const 
+size_t EccelRFID::WriteUART(const void* data, size_t dataLen) const 
 {
     const ssize_t bytesWritten = write(m_serial, data, dataLen);
-    return bytesWritten;
+
+    if (bytesWritten == -1)
+    {
+        throw UARTError(UARTError::Type::Write);
+    }
+
+    return static_cast<size_t>(bytesWritten);
+}
+
+Packet EccelRFID::SendCommand(Command command, const uint8_t* params, const uint16_t paramsSize) const
+{
+    std::vector<uint8_t> dataPayload(sizeof(Command) + paramsSize);
+
+    dataPayload.push_back(static_cast<uint8_t>(command));
+    
+    for (int i = 0; i < paramsSize; ++i)
+    {
+        dataPayload.push_back(params[i]);
+    }
+
+    const Packet packet(dataPayload.data(), dataPayload.size());
+    const uint8_t* packetPayload = packet.AsBytes.get();
+    const size_t packetPayloadSz = packet.AsBytes.size();
+
+    try
+    {
+        WriteUART(packetPayload, packetPayloadSz);
+        ReadUART();
+    }
+    catch (const UARTError& error)
+    {
+        throw std::runtime_error(error.what());
+    }
+
+    std::vector<uint8_t> responseData(m_serialBufLen);
+
+    for (size_t i = 0; i < m_serialBufferLen; ++i)
+    {
+        responseData.push_back(m_serialBuf[i]);
+    }
+
+    const Packet response(std::move(responseData));
+
+    return response;
 }
 
 EccelRFID::Packet::Packet(const void* data, uint16_t len)
@@ -157,18 +208,27 @@ EccelRFID::Packet::Packet(const void* data, uint16_t len)
 }
 
 EccelRFID::Packet::Packet(const std::vector<uint8_t>& packetData)
+    : m_packet(packetData)
 {
-    m_packet = packetData;
+}
+
+EccelRFID::Packet::Packet(std::vector<uint8_t>&& packetData)
+    : m_packet(packetData)
+{
 }
 
 std::vector<uint8_t> EccelRFID::Packet::Data() const
 {
-    std::vector<uint8_t> ret;
-
     const uint8_t lenLow = m_packet[2];
     const uint8_t lenHigh = m_packet[3];
 
     const uint16_t len = (lenHigh << 8) | lenLow;
+    std::vector<uint8_t> ret(len);
+
+    for (int i = 0; i < len; ++i)
+    {
+        ret[i] = data[i + 5];
+    }
 }
 
 }
