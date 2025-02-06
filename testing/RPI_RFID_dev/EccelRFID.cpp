@@ -6,6 +6,27 @@
 #include "EccelRFID.h"
 
 
+
+#include <stdio.h>
+
+
+static void Hexdump(const void* data, size_t size)
+{
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        printf("%02x  ", bytes[i]);
+
+        if (i % 16 == 0 && i > 0)
+        {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
+
+
 static const uint16_t s_tableCCITTCRC[256] = {  
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5,  
     0x60c6, 0x70e7, 0x8108, 0x9129, 0xa14a, 0xb16b,  
@@ -42,7 +63,7 @@ static const uint16_t s_tableCCITTCRC[256] = {
     0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9,  
     0xb98a, 0xa9ab, 0x5844, 0x4865, 0x7806, 0x6827,  
     0x18c0, 0x08e1, 0x3882, 0x28a3, 0xcb7d, 0xdb5c,  
-    0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a
+    0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
     0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0,  
     0x2ab3, 0x3a92, 0xfd2e, 0xed0f, 0xdd6c, 0xcd4d,  
     0xbdaa, 0xad8b, 0x9de8, 0x8dc9, 0x7c26, 0x6c07,  
@@ -76,7 +97,7 @@ namespace nameplate
 {
 
 EccelRFID::EccelRFID(const char* serialPort)
-    : m_serial(0), m_serialBuf(std::make_unique<uint8_t[]>(UART_BUFFER_SZ)), m_serialBufferLen(0)
+    : m_serial(0), m_serialBuf(std::make_unique<uint8_t[]>(UART_BUFFER_SZ)), m_serialBufferLen(0), m_responsePacket()
 {
     m_serial = open(serialPort, O_RDWR | O_NOCTTY);
 
@@ -122,7 +143,7 @@ uint32_t EccelRFID::GetId() const
 }
 
 // TODO go back to size_t since throwing the except
-size_t EccelRFID::ReadUART() const
+size_t EccelRFID::ReadUART()
 {
     memset(m_serialBuf.get(), 0, UART_BUFFER_SZ * sizeof(char));
 
@@ -150,9 +171,9 @@ size_t EccelRFID::WriteUART(const void* data, size_t dataLen) const
     return static_cast<size_t>(bytesWritten);
 }
 
-Packet EccelRFID::SendCommand(Command command, const uint8_t* params, const uint16_t paramsSize) const
+EccelRFID::Packet EccelRFID::SendCommand(Command command, const uint8_t* params, uint16_t paramsSize)
 {
-    std::vector<uint8_t> dataPayload(sizeof(Command) + paramsSize);
+    std::vector<uint8_t> dataPayload;
 
     dataPayload.push_back(static_cast<uint8_t>(command));
     
@@ -160,14 +181,26 @@ Packet EccelRFID::SendCommand(Command command, const uint8_t* params, const uint
     {
         dataPayload.push_back(params[i]);
     }
+    
+  
+    const uint16_t crc = GetCCITTCRC(dataPayload.data(), static_cast<uint32_t>(dataPayload.size()));
+    const uint8_t* crcBytes = reinterpret_cast<const uint8_t*>(&crc); // TODO do this the proper way even though this works
 
-    const Packet packet(dataPayload.data(), dataPayload.size());
-    const uint8_t* packetPayload = packet.AsBytes.get();
-    const size_t packetPayloadSz = packet.AsBytes.size();
+    dataPayload.push_back(crcBytes[0]);
+    dataPayload.push_back(crcBytes[1]);
+
+    const Packet packet(dataPayload.data(), static_cast<uint16_t>(dataPayload.size()));
+    const uint8_t* packetPayload = packet.AsBytes().data();
+    const size_t packetPayloadSz = packet.AsBytes().size();
+
+
 
     try
     {
-        WriteUART(packetPayload, packetPayloadSz);
+        printf("writing: \n");
+        Hexdump(packetPayload, packetPayloadSz);
+        const size_t bytesWritten = WriteUART(packetPayload, packetPayloadSz);
+        printf("%ld written\n", bytesWritten);
         ReadUART();
     }
     catch (const UARTError& error)
@@ -175,15 +208,20 @@ Packet EccelRFID::SendCommand(Command command, const uint8_t* params, const uint
         throw std::runtime_error(error.what());
     }
 
-    std::vector<uint8_t> responseData(m_serialBufLen);
+    std::vector<uint8_t> responseData(m_serialBufferLen);
 
     for (size_t i = 0; i < m_serialBufferLen; ++i)
     {
         responseData.push_back(m_serialBuf[i]);
     }
+    printf("received all:\n");
+    Hexdump(responseData.data(), responseData.size());
 
     const Packet response(std::move(responseData));
 
+    //const std::vector<uint8_t> tmp(4);
+
+    //const Packet response(tmp);
     return response;
 }
 
@@ -191,14 +229,18 @@ EccelRFID::Packet::Packet(const void* data, uint16_t len)
 {
     const uint16_t crc = GetCCITTCRC(data, len);
 
-    const uint8_t* lenBytes = (const uint8_t*)len;
-    const uint8_t* crcBytes = (const uint8_t*)crc;
+    const uint8_t lenHi = static_cast<uint8_t>((len >> 8) & 0xff);
+    const uint8_t lenLo = static_cast<uint8_t>(len & 0xff);
+
+    const uint8_t crcHi = static_cast<uint8_t>((crc >> 8) & 0xff);
+    const uint8_t crcLo = static_cast<uint8_t>(len & 0xff);
 
     m_packet.push_back(0x02);
-    m_packet.push_back(lenBytes[0]);
-    m_packet.push_back(lenBytes[1]);
-    m_packet.push_back(crcBytes[0]);
-    m_packet.push_back(crcBytes[1]);
+    m_packet.push_back(lenLo);
+    m_packet.push_back(lenHi);
+    m_packet.push_back(crcLo);
+    m_packet.push_back(crcHi);
+
 
     const uint8_t* payload = (const uint8_t*)data;
     for (int i = 0; i < len; ++i)
@@ -227,10 +269,11 @@ std::vector<uint8_t> EccelRFID::Packet::Data() const
 
     for (int i = 0; i < len; ++i)
     {
-        ret[i] = data[i + 5];
+        ret[i] = m_packet[i + 5];
     }
-}
 
+    return ret;
+}
 }
 
 #include <iostream>
@@ -240,24 +283,32 @@ using namespace nameplate;
 
 int main()
 {
-    const EccelRFID rfid("/dev/ttyAMA0");
+    EccelRFID rfid("/dev/ttyAMA0");
 
-    const char* greeting = "hello world\n";
-    const size_t len = strlen(greeting) + 1;
+    auto packet = rfid.SendCommand(EccelRFID::Command::Read, nullptr, 0);
+    auto bytes = packet.AsBytes();
 
-    const ssize_t cntWrite = rfid.WriteUART(greeting, len);
-    const ssize_t cntRead = rfid.ReadUART();
+    std::cout << "received data:\n";
+    Hexdump(bytes.data(), bytes.size());
 
+    /*
 
-    std::cout << cntWrite << " bytes written\n";
-    std::cout << cntRead << " bytes read\n";
+    const uint8_t wr[] = { 0x58, 0x02, 0x01, 0x00, 0xab };
+    auto packet = rfid.SendCommand(EccelRFID::Command::Write, wr, 5);
+    auto bytes = packet.AsBytes();
 
+    std::cout << "received data:\n";
+    Hexdump(bytes.data(), bytes.size());
 
+    const uint8_t rd[] = { 0x58, 0x02 };
+    packet = rfid.SendCommand(EccelRFID::Command::Read, rd, 2);
+    bytes = packet.AsBytes();
 
-    const char* data = (const char*)rfid.GetBuffer();
+    std::cout << "received data\n";
+    Hexdump(bytes.data(), bytes.size());
 
-    std::cout << data;
+    */
 
-    std::cout << "end\n";
+    std::cout << "clean exit\n";
     return 0;
 }

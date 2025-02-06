@@ -13,17 +13,17 @@ public:
     {
         Read,
         Write
-    }
+    };
 public:
     UARTError(Type type)
     {
         m_what = "[UART]There was an error ";
         m_what += type == Type::Read ? "reading from " : "writing to ";
-        m_what += "UART.".
+        m_what += "UART.";
     }
 
 
-    const char* what() const override noexcept
+    const char* what() const noexcept override
     {
         return m_what.c_str();
     }
@@ -88,7 +88,7 @@ public:
         ModuleTimeout = 0x06,
         Overflow = 0x07,
         AsyncPacket = 0x08,
-        Busy = 0x09
+        Busy = 0x09,
         SystemStart = 0x0a
     };
 
@@ -105,19 +105,12 @@ public:
     }
 
 //private:
-public:
-    size_t ReadUART() const;
-    size_t WriteUART(const void* data, size_t dataLen) const;
-
-    Packet SendCommand(Command command) const;
-
-private:
 
     class Packet
     {
     public:
         Packet(const void* data, uint16_t len);
-        Packet(const std::vector<uint8_t> packetData);
+        Packet(const std::vector<uint8_t>& packetData);
         Packet(std::vector<uint8_t>&& packetData);
 
 
@@ -132,11 +125,19 @@ private:
         std::vector<uint8_t> m_packet;
     };
 
+
+//private:
+public:
+    size_t ReadUART();
+    size_t WriteUART(const void* data, size_t dataLen) const;
+
+    Packet SendCommand(Command command, const uint8_t* params, uint16_t paramsSize);
+
 private:
     int m_serial;
     std::unique_ptr<uint8_t[]> m_serialBuf;
     size_t m_serialBufferLen;
-    Packet m_responsePacket;
+    std::unique_ptr<Packet> m_responsePacket;
 
 private:
     static constexpr size_t UART_BUFFER_SZ = 1024;
