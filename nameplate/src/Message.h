@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 #include <exception>
 #include <vector>
@@ -18,7 +19,7 @@ struct Header
     {
     }
 
-    uint32_t clientId; // only for messages from server... or server is clientid 0???
+    uint32_t clientId;
     PacketType packetType;
     uint16_t payloadSize;
 };
