@@ -12,6 +12,8 @@ public:
     {
     }
 
+    virtual ~Display() = default;
+
     unsigned int Width() const
     {
         return m_width;

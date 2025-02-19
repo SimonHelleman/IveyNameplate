@@ -27,6 +27,8 @@ public:
 
     bool IsConnected();
 
+    void Send(const Message& msg);
+
     std::deque<Message>& Messages()
     {
         return m_incomingMessageQueue;
@@ -42,7 +44,7 @@ private:
     std::unique_ptr<ServerConnection> m_server;
 
     std::deque<Message> m_incomingMessageQueue;
-
+    uint32_t m_id;
 };
 
 }

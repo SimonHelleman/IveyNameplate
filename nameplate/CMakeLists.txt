@@ -31,8 +31,12 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    ../common/message/Message.h
+    ../common/message/Message.cpp
     src/Display.h
     src/Nameplate.h
+    src/Network.h
+    src/RFID.h
     src/Util/Color.h
     src/Platform/SFML/DisplaySFML.h
 )

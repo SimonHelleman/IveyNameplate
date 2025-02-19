@@ -21,7 +21,7 @@ public:
 
     ServerConnection operator=(const ServerConnection&) = delete;
 
-
+    void Connect(const asio::ip::tcp::resolver::results_type& endpoint);
     bool IsConnected() const;
 
     void SendMessage(const Message& msg); // WINAPI clash??
@@ -34,6 +34,5 @@ private:
 
     std::deque<Message>& m_incomingMessageQueue;
     std::deque<Message> m_outgoingMessageQueue;
-
 };
 }
