@@ -9,7 +9,8 @@ namespace nameplate
 
 enum class PacketType : uint16_t
 {
-    Null = 0
+    Null = 0,
+    SetClientId = 1
 };
 
 struct Header
@@ -30,6 +31,11 @@ class Message
 public:
     Message(PacketType type)
         : m_header(0, type, 0)
+    {
+    }
+
+    Message(PacketType type, uint32_t clientId)
+        : m_header(clientId, type, 0)
     {
     }
 

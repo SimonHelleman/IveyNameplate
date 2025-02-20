@@ -12,7 +12,7 @@
 namespace nameplate
 {
 
-class ServerConnection : public std::enable_shared_from_this<ServerConnection>
+class ServerConnection //: public std::enable_shared_from_this<ServerConnection>
 {
 public:
     ServerConnection(asio::io_context& context, asio::ip::tcp::socket socket, std::deque<Message>& msgInQueue);
@@ -21,6 +21,7 @@ public:
 
     ServerConnection operator=(const ServerConnection&) = delete;
 
+public:
     void Connect(const asio::ip::tcp::resolver::results_type& endpoint);
     bool IsConnected() const;
 
