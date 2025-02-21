@@ -15,13 +15,18 @@ FetchContent_MakeAvailable(asio)
 
 set(SOURCE_FILES
     src/Main.cpp
+    ../common/message/Message.cpp
+    src/ClientConnection.cpp
+    src/Server.cpp
 )
 
 set(HEADER_FILES
     ../common/message/Message.h
-    ../common/message/Message.cpp
+    src/ClientConnection.h
+    src/Server.h
 )
 
 add_executable(server ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(server PRIVATE ${asio_SOURCE_DIR}/asio/include)
+target_include_directories(server PRIVATE ../common/message)

@@ -23,10 +23,10 @@ public:
 
     void AsyncWaitForConnection();
 
-    static void SendMessage(ClientConnection& client, const Message& message);
+    void SendMessage(ClientConnection& client, const Message& message);
 
     void OnConnect(ClientConnection& client);
-    void OnDisconnect(ClientConnection& client);
+    void OnDisconnect(const ClientConnection& client);
 
     void HandleMessages();
 

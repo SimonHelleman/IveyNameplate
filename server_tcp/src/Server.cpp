@@ -1,3 +1,5 @@
+#include <utility>
+#include <functional>
 #include <algorithm>
 #include "Server.h"
 
@@ -39,19 +41,20 @@ void Server::AsyncWaitForConnection()
             AsyncWaitForConnection();
             return;
         }
+        
+        const std::function<void(const ClientConnection&)> disconHandle = std::bind(&Server::OnDisconnect, this, std::placeholders::_1);
+        
+        const auto connection = std::make_shared<ClientConnection>(
+            m_context, std::move(socket), ++m_numCommections, m_incomingMessageQueue, disconHandle
+        );
+
+        m_connections.push_back(connection);
+        connection->Start();
+
+        OnConnect(*connection);
+        
+        AsyncWaitForConnection();
     });
-
-    const auto connection = std::make_shared<ClientConnection>(
-        m_context, std::move(socket), ++m_numCommections, m_incomingMessageQueue
-    );
-
-    m_connections.push_back(connection);
-
-    connection->Start();
-
-    OnConnect(*connection);
-
-    AsyncWaitForConnection();
 }
 
 void Server::SendMessage(ClientConnection& client, const Message& message)
@@ -72,7 +75,7 @@ void Server::OnConnect(ClientConnection& client)
     SendMessage(client, message);
 }
 
-void Server::OnDisconnect(ClientConnection& client)
+void Server::OnDisconnect(const ClientConnection& client)
 {
     const auto it = std::find_if(m_connections.begin(), m_connections.end(), [&client](const std::shared_ptr<ClientConnection>& ptr) {
         return ptr.get() == &client;

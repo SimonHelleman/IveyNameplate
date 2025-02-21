@@ -14,7 +14,7 @@ enum class PacketType : uint16_t
 };
 
 struct Header
-{
+{    
     Header(uint32_t clientId, PacketType type, uint16_t size)
         : clientId(clientId), packetType(type), payloadSize(size)
     {
@@ -24,11 +24,12 @@ struct Header
     PacketType packetType;
     uint16_t payloadSize;
 };
-static_assert(sizeof(Header) == 8);
+static_assert(sizeof(Header) == 8, "Header allignment bad");
 
 class Message
 {
 public:
+
     Message(PacketType type)
         : m_header(0, type, 0)
     {
@@ -49,7 +50,7 @@ public:
         return static_cast<uint16_t>(m_payload.size());
     }
 
-    const Header& Head() const
+    Header& Head()
     {
         return m_header;
     }
