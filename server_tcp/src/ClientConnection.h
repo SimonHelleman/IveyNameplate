@@ -36,9 +36,9 @@ public:
         return m_id;
     }
 
-    asio::ip::address IpAddress() const
+    std::string IpAddress() const
     {
-        return m_socket.remote_endpoint().address();
+        return m_ipAddr.to_string();
     }
 
 private:
@@ -51,7 +51,9 @@ private:
 private:
     asio::ip::tcp::socket m_socket;
     asio::io_context& m_context;
+    asio::ip::address m_ipAddr;
     unsigned int m_id;
+
 
     Message m_incomingMsg;
      

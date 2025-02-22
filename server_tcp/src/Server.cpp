@@ -3,6 +3,9 @@
 #include <algorithm>
 #include "Server.h"
 
+#define SCROLLS_USE_LOGGER_MACROS
+#include <Scrolls.h>
+
 namespace nameplate
 {
 
@@ -19,6 +22,8 @@ void Server::Start()
     m_serverThread = std::thread([this]() {
         m_context.run();
     });
+
+    INFO("[Server] server started on port " + std::to_string(m_port));
 }
 
 void Server::Stop()
@@ -29,6 +34,8 @@ void Server::Stop()
     {
         m_serverThread.join();
     }
+
+    INFO("[Server] server stopped");
 }
 
 void Server::AsyncWaitForConnection()
@@ -36,11 +43,13 @@ void Server::AsyncWaitForConnection()
     m_connectionAcceptor.async_accept([this](asio::error_code error, asio::ip::tcp::socket socket) {
         if (error)
         {
-            // TODO
+            ERROR_FL("[Server] async_accept failed with erorr: " + error.message());
 
             AsyncWaitForConnection();
             return;
         }
+
+        LOG_DEBUG("[Server] New connection from " + socket.remote_endpoint().address().to_string());
         
         const std::function<void(const ClientConnection&)> disconHandle = std::bind(&Server::OnDisconnect, this, std::placeholders::_1);
         
@@ -70,6 +79,7 @@ void Server::SendMessage(ClientConnection& client, const Message& message)
 
 void Server::OnConnect(ClientConnection& client)
 {
+    INFO("[Server] " + client.IpAddress() + " connected to server with id " + std::to_string(client.Id()));
     // Send their Id
     Message message(PacketType::SetClientId, client.Id());
     SendMessage(client, message);
@@ -77,6 +87,7 @@ void Server::OnConnect(ClientConnection& client)
 
 void Server::OnDisconnect(const ClientConnection& client)
 {
+    INFO("[Server] " + client.IpAddress() + " (connection_" + std::to_string(client.Id()) + ") disconnected from server");
     const auto it = std::find_if(m_connections.begin(), m_connections.end(), [&client](const std::shared_ptr<ClientConnection>& ptr) {
         return ptr.get() == &client;
     });
@@ -84,14 +95,21 @@ void Server::OnDisconnect(const ClientConnection& client)
     if (it != m_connections.end())
     {
         m_connections.erase(it);
+        return;
     }
 
-    // TODO throw error or smth
+    ERROR("[Server] Could not remove connection_" + std::to_string(client.Id()) + " (" + client.IpAddress() + ')');
 }
 
 void Server::HandleMessages()
 {
-    
+    while (!m_incomingMessageQueue.empty())
+    {
+        const Message& msg = m_incomingMessageQueue.front();
+        INFO("[Server] message:\n" + msg.AsString());
+
+        m_incomingMessageQueue.pop_front();
+    }
 }
 
 }
