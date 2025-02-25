@@ -10,7 +10,14 @@ namespace nameplate
 enum class PacketType : uint16_t
 {
     Null = 0,
-    SetClientId = 1
+    SetClientId,
+    StudentId,
+    StudentInfo,
+    StartPoll,
+    EndPoll,
+    PollResponse,
+    LeaveClass,
+    NameFormat
 };
 
 struct Header
@@ -53,6 +60,16 @@ public:
     Header& Head()
     {
         return m_header;
+    }
+
+    uint32_t ClientId() const
+    {
+        return m_header.clientId;
+    }
+
+    PacketType PacketType() const
+    {
+        return m_header.packetType;
     }
 
     void ResizePayload(uint16_t size)

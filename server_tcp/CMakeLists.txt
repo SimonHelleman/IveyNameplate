@@ -25,17 +25,32 @@ set(SOURCE_FILES
     src/Main.cpp
     ../common/message/Message.cpp
     src/ClientConnection.cpp
+    src/DatabaseConnection.cpp
     src/Server.cpp
 )
 
 set(HEADER_FILES
+    ../common/Student.h
     ../common/message/Message.h
     src/ClientConnection.h
+    src/DatabaseConnection.h
     src/Server.h
+    src/Secret.h
 )
 
 
 add_executable(server ${SOURCE_FILES} ${HEADER_FILES})
+
+if (WIN32)
+    # absolute path... I know... bad... I don't care
+    set(POSTGRESQL_DIR "C:/Program Files/PostgreSQL/17")
+    set(POSTGRESQL_INCLUDE_DIR "${POSTGRESQL_DIR}/include")
+    set(POSTGRESQL_LIB_DIR "${POSTGRESQL_DIR}/lib")
+    include_directories(${POSTGRESQL_INCLUDE_DIR})
+    link_directories(${POSTGRESQL_LIB_DIR})
+
+    target_link_libraries(server PRIVATE "${POSTGRESQL_LIB_DIR}/libpq.lib")
+endif()
 
 target_compile_definitions(server PRIVATE
     $<$<CONFIG:Release>:SCROLLS_DISABLE_DEBUG_LOG>
@@ -44,4 +59,5 @@ target_compile_definitions(server PRIVATE
 target_link_libraries(server PRIVATE scrolls)
 target_include_directories(server PRIVATE ${asio_SOURCE_DIR}/asio/include)
 target_include_directories(server PRIVATE ${scrolls_SOURCE_DIR}/src)
+target_include_directories(server PRIVATE ../common)
 target_include_directories(server PRIVATE ../common/message)

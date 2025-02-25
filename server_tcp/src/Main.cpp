@@ -6,6 +6,8 @@
 #include <Scrolls.h>
 
 #include "Server.h"
+#include "DatabaseConnection.h"
+#include "Secret.h"
 
 bool g_shouldEnd = false;
 
@@ -27,10 +29,13 @@ int main()
 {
     std::cout << "hello world\n";
 
+
     auto& logger = scrolls::Logger::Get();
     logger.AddOutput(scrolls::LogLevel::Debug | scrolls::LogLevel::Info, scrolls::Logger::StandardOutput);
     logger.AddOutput(scrolls::LogLevel::Warning | scrolls::LogLevel::Error, scrolls::Logger::StandardErrorOutput);
 
+    nameplate::DatabaseConnection database("nameplate_db", "postgres", DB_PASSWORD);
+    database.DoesStudentExist(123);
 
     std::thread consoleListen(ConsoleThread);
 

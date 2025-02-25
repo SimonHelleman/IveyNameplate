@@ -106,7 +106,13 @@ void Server::HandleMessages()
     while (!m_incomingMessageQueue.empty())
     {
         const Message& msg = m_incomingMessageQueue.front();
-        INFO("[Server] message:\n" + msg.AsString());
+        LOG_DEBUG("[Server] message:\n" + msg.AsString());
+
+        switch (msg.PacketType())
+        {
+        default:
+            ERROR_FL("[Server] message is an unknown type and can not be handled");
+        }
 
         m_incomingMessageQueue.pop_front();
     }
