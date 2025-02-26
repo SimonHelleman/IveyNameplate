@@ -36,6 +36,7 @@ int main()
 
     nameplate::DatabaseConnection database("nameplate_db", "postgres", DB_PASSWORD);
     database.DoesStudentExist(123);
+    database.RecordAttendance(123, std::chrono::system_clock::now());
 
     std::thread consoleListen(ConsoleThread);
 

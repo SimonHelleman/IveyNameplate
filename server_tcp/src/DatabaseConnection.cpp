@@ -1,5 +1,8 @@
 #include <string.h>
+#include <ctime>
+#include <sstream>
 #include <stdexcept>
+
 
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
@@ -22,7 +25,7 @@ DatabaseConnection::DatabaseConnection(const char* databaseName, const char* use
 	{
 		ERROR("[Database] Error connecting to database: " + std::string(PQerrorMessage(m_connection)));
 		PQfinish(m_connection);
-		std::runtime_error("fatal database error");
+		throw std::runtime_error("fatal database error");
 	}
 }
 
@@ -47,6 +50,7 @@ bool DatabaseConnection::Query(const std::string& query)
 		m_lastResult = nullptr;
 	}
 
+	LOG_DEBUG("[Database] Query: " + query);
 	m_lastResult = PQexec(m_connection, query.c_str());
 
 	const ExecStatusType status = PQresultStatus(m_lastResult);
@@ -62,7 +66,6 @@ bool DatabaseConnection::Query(const std::string& query)
 bool DatabaseConnection::DoesStudentExist(uint32_t id)
 {
 	const std::string query = "SELECT * FROM student WHERE student_id=" + std::to_string(id) + ';';
-	LOG_DEBUG("[Database] Query: " + query);
 	
 	if (!Query(query))
 	{
@@ -73,5 +76,38 @@ bool DatabaseConnection::DoesStudentExist(uint32_t id)
 
 	return numRows > 0;
 }
+
+void DatabaseConnection::CreateStudent(uint32_t id, const char* lastName, const char* firstName)
+{
+	std::stringstream query;
+	query << "INSERT INTO student VALUES (";
+	query << id << ", '" << lastName << "', '" << firstName << "');";
+
+	Query(query.str());
+}
+
+void DatabaseConnection::RecordAttendance(uint32_t id, std::chrono::system_clock::time_point time)
+{
+	std::stringstream query;
+
+	const std::time_t timeNow = std::chrono::system_clock::to_time_t(time);
+	const std::tm* localTime = std::localtime(&timeNow);
+
+	const int year = localTime->tm_year + 1900;
+	const int month = localTime->tm_mon + 1;
+	const int day = localTime->tm_mday;
+	const int hour = localTime->tm_hour;
+	const int minute = localTime->tm_min;
+	const int second = localTime->tm_sec;
+
+
+	query << "INSERT INTO attendance (student_id, attendance_date, arrivial_time) VALUES (";
+	query << id << ", '" << year << '-' << month << '-' << day << "', '"; 
+	query << hour << ':' << minute << ':' << second << "');";
+
+	Query(query.str());
+}
+
+
 
 }
