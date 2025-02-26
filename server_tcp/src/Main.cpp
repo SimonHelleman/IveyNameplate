@@ -1,6 +1,6 @@
 #include <iostream>
 #include <thread>
-#include <asio.hpp>
+#include <crow.h>
 
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
@@ -39,6 +39,15 @@ int main()
     database.RecordAttendance(123, std::chrono::system_clock::now());
 
     std::thread consoleListen(ConsoleThread);
+
+    crow::SimpleApp app;
+
+    CROW_ROUTE(app, "/")([]() {
+        return "hello world";
+    });
+
+
+    auto tmp = app.port(18080).multithreaded().run_async();
 
     nameplate::Server s(25565);
     s.Start();

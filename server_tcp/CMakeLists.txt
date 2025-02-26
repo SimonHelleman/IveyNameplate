@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.27.8)
 project(IveyNameplate LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
@@ -13,6 +15,8 @@ FetchContent_Declare(asio
         SYSTEM)
 FetchContent_MakeAvailable(asio)
 
+set(ASIO_INCLUDE_DIR "{asio_SOURCE_DIR}/asio/include")
+
 FetchContent_Declare(scrolls
         GIT_REPOSITORY https://github.com/SimonHelleman/scrolls.git
         GIT_TAG main
@@ -20,6 +24,14 @@ FetchContent_Declare(scrolls
         EXCLUDE_FROM_ALL
         SYSTEM)
 FetchContent_MakeAvailable(scrolls)
+
+FetchContent_Declare(crow
+        GIT_REPOSITORY https://github.com/CrowCpp/Crow.git
+        GIT_TAG v1.2.1.2
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(crow)
 
 set(SOURCE_FILES
     src/Main.cpp
@@ -59,5 +71,6 @@ target_compile_definitions(server PRIVATE
 target_link_libraries(server PRIVATE scrolls)
 target_include_directories(server PRIVATE ${asio_SOURCE_DIR}/asio/include)
 target_include_directories(server PRIVATE ${scrolls_SOURCE_DIR}/src)
+target_include_directories(server PRIVATE ${crow_SOURCE_DIR}/include)
 target_include_directories(server PRIVATE ../common)
 target_include_directories(server PRIVATE ../common/message)
