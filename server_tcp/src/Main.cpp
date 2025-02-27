@@ -41,13 +41,13 @@ int main()
 
     std::thread consoleListen(ConsoleThread);
 
-    crow::SimpleApp app;
+    crow::SimpleApp webAPI;
 
-    CROW_ROUTE(app, "/")([]() {
+    CROW_ROUTE(webAPI, "/")([]() {
         return "hello world";
     });
 
-    auto tmp = app.port(18080).multithreaded().run_async();
+    auto tmp = webAPI.port(18080).multithreaded().run_async();
 
     nameplate::Server s(25565);
     s.Start();
