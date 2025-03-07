@@ -13,7 +13,7 @@ Client::Client(const char* serverIP, unsigned int serverPort)
         asio::ip::tcp::resolver resolver(m_context);
         const auto endpoints = resolver.resolve(serverIP, std::to_string(serverPort));
 
-        m_server = std::make_unique<ServerConnection>(m_context, asio::ip::tcp::socket(m_context), m_incomingMessageQueue);
+        m_server = std::make_shared<ServerConnection>(m_context, asio::ip::tcp::socket(m_context), m_incomingMessageQueue);
 
         m_server->Connect(endpoints);
 
@@ -42,7 +42,7 @@ void Client::Disconnect()
         m_clientThread.join();
     }
 
-    m_server.release();
+    m_server.reset();
 }
 
 bool Client::IsConnected()
@@ -53,6 +53,14 @@ bool Client::IsConnected()
     }
 
     return false;
+}
+
+void Client::Send(const Message& msg)
+{
+    if (IsConnected())
+    {
+        m_server->SendMessageW(msg);
+    }
 }
 
 

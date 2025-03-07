@@ -41,7 +41,7 @@ private:
     // socket gets moved to connection upon success
     asio::ip::tcp::socket m_tempSocket;
 
-    std::unique_ptr<ServerConnection> m_server;
+    std::shared_ptr<ServerConnection> m_server;
 
     std::deque<Message> m_incomingMessageQueue;
     uint32_t m_id;

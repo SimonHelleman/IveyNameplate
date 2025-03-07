@@ -12,7 +12,7 @@
 namespace nameplate
 {
 
-class ServerConnection //: public std::enable_shared_from_this<ServerConnection>
+class ServerConnection : public std::enable_shared_from_this<ServerConnection>
 {
 public:
     ServerConnection(asio::io_context& context, asio::ip::tcp::socket socket, std::deque<Message>& msgInQueue);
@@ -28,10 +28,27 @@ public:
     void SendMessage(const Message& msg); // WINAPI clash??
     void Disconnect();
 
+private:
+
+    std::string IpAddress() const
+    {
+        return m_ipAddr.to_string();
+    }
+
+private:
+    void AsyncSendHeader();
+    void AsyncSendPayload();
+    
+    void AsyncReceiveHeader();
+    void AsyncReceivePayload();
+
 
 private:
     asio::ip::tcp::socket m_socket;
     asio::io_context& m_context;
+    asio::ip::address m_ipAddr;
+
+    Message m_incomingMsg;
 
     std::deque<Message>& m_incomingMessageQueue;
     std::deque<Message> m_outgoingMessageQueue;

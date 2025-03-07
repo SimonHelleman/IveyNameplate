@@ -152,7 +152,4 @@ void ClientConnection::AsyncReceivePayload()
         self->AsyncReceiveHeader();
     });
 }
-
-
-
 }

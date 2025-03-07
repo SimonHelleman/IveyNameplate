@@ -21,6 +21,14 @@ FetchContent_Declare(asio
         SYSTEM)
 FetchContent_MakeAvailable(asio)
 
+FetchContent_Declare(scrolls
+        GIT_REPOSITORY https://github.com/SimonHelleman/scrolls.git
+        GIT_TAG main
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(scrolls)
+
 #file(GLOB_RECURSE SOURCE_FILES ${CMAKE_SOURCE_DIR}/src/**/*.cpp)
 #file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/src/**/*.h)
 
@@ -45,7 +53,16 @@ add_executable(nameplate ${SOURCE_FILES} ${HEADER_FILES})
 #target_include_directories(nameplate PRIVATE ${CMAKE_SOURCE_DIR}/dependencies/asio-1.30.2/include)
 target_include_directories(nameplate PRIVATE ${asio_SOURCE_DIR}/asio/include)
 
+target_compile_definitions(nameplate PRIVATE
+    $<$<CONFIG:Release>:SCROLLS_DISABLE_DEBUG_LOG>
+)
+
 target_link_libraries(nameplate PRIVATE sfml-graphics)
+target_link_libraries(nameplate PRIVATE scrolls)
+target_include_directories(nameplate PRIVATE ${scrolls_SOURCE_DIR}/include)
+target_include_directories(nameplate PRIVATE ../common)
+target_include_directories(nameplate PRIVATE ../common/message)
+
 target_compile_features(nameplate PRIVATE cxx_std_17)
 
 if(WIN32)
