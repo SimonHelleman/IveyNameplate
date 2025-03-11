@@ -1,5 +1,9 @@
 #pragma once
 #include <memory>
+
+#define SCROLLS_USE_LOGGER_MACROS
+#include <Scrolls.h>
+
 #include "PlatformFactory.h"
 
 namespace nameplate {
@@ -12,6 +16,8 @@ public:
     Nameplate(const PlatformConfig<TCPNetworkConfig>& config);
 
     void Run();
+
+    void TestHandler(const Message& msg);
     
 private:
     const std::unique_ptr<Display> m_frontDisplay;

@@ -7,7 +7,7 @@ namespace nameplate
 
 
 ServerConnection::ServerConnection(asio::io_context& context, asio::ip::tcp::socket socket, std::deque<Message>& msgInQueue)
-    :  m_context(context), m_socket(std::move(socket)), m_ipAddr(m_socket.remote_endpoint().address()), 
+    :  m_context(context), m_socket(std::move(socket)), m_ipAddr(), 
     m_incomingMessageQueue(msgInQueue), m_incomingMsg(PacketType::Null, 0)
 {
 }
@@ -17,6 +17,7 @@ void ServerConnection::Connect(const asio::ip::tcp::resolver::results_type& endp
     asio::async_connect(m_socket, endpoint, [this](std::error_code error, asio::ip::tcp::endpoint end) {
         if (!error)
         {
+            m_ipAddr = m_socket.remote_endpoint().address();
             AsyncReceiveHeader();
         }
     });

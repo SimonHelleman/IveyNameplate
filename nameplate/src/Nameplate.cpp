@@ -8,6 +8,14 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_rearDisplay(PlatformFactory::CreateDisplay(config.displayWidth, config.displayHeight, "nameplate_rear")),
     m_network(PlatformFactory::CreateNetwork<TCPNetworkConfig>(config.networkConfig))
 {
+    m_network->SubscribeToPacket(PacketType::SetClientId, [this](const Message& msg) {
+        TestHandler(msg);
+    });
+}
+
+void Nameplate::TestHandler(const Message& msg)
+{
+    LOG_DEBUG("[Nameplate] Received clientId msg");
 }
 
 
@@ -17,6 +25,9 @@ void Nameplate::Run()
     {
         m_frontDisplay->HandleEvents();
         m_rearDisplay->HandleEvents();
+
+        m_network->HandleMessages();
+
         m_frontDisplay->Clear({ 255, 255, 255 });
         m_rearDisplay->Clear( { 255, 255, 255 });
 

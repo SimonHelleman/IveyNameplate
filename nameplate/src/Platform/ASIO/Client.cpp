@@ -34,7 +34,7 @@ Client::Client(const TCPNetworkConfig& config)
     }
     catch (const std::exception& e)
     {
-        // TODO throw custom except
+        ERROR_FL(std::string("[Client] ") + e.what());
     }
 }
 

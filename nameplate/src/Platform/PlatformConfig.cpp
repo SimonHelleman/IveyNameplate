@@ -16,7 +16,7 @@ PlatformConfig<TCPNetworkConfig> GetPlatformConfig()
     constexpr unsigned int WINDOW_HEIGHT = 720;
 #endif
 
-    const TCPNetworkConfig NETWORK_CONFIG = { "172.0.0.1", 25565 };
+    const TCPNetworkConfig NETWORK_CONFIG = { "127.0.0.1", 25565 };
     return PlatformConfig<TCPNetworkConfig>(WINDOW_WIDTH, WINDOW_HEIGHT, NETWORK_CONFIG);
 }
 #endif
