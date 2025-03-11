@@ -34,31 +34,40 @@ FetchContent_MakeAvailable(scrolls)
 
 set(SOURCE_FILES
     src/Nameplate.cpp
+    src/Platform/PlatformConfig.cpp
+    src/Platform/Desktop/EntryDesktop.cpp
     src/Platform/SFML/DisplaySFML.cpp
-    src/Platform/SFML/EntrySFML.cpp
+    src/Platform/ASIO/Client.cpp
+    src/Platform/ASIO/ServerConnection.cpp
 )
 
 set(HEADER_FILES
     ../common/message/Message.h
     ../common/message/Message.cpp
+    src/PlatformFactory.h
     src/Display.h
     src/Nameplate.h
     src/Network.h
     src/RFID.h
     src/Util/Color.h
     src/Platform/SFML/DisplaySFML.h
+    src/Platform/ASIO/Client.h
+    src/Platform/ASIO/ServerConnection.h
 )
 
 add_executable(nameplate ${SOURCE_FILES} ${HEADER_FILES})
-#target_include_directories(nameplate PRIVATE ${CMAKE_SOURCE_DIR}/dependencies/asio-1.30.2/include)
-target_include_directories(nameplate PRIVATE ${asio_SOURCE_DIR}/asio/include)
 
 target_compile_definitions(nameplate PRIVATE
     $<$<CONFIG:Release>:SCROLLS_DISABLE_DEBUG_LOG>
 )
 
+target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_DESKTOP)
+target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_SFML)
+target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_ASIO)
+
 target_link_libraries(nameplate PRIVATE sfml-graphics)
 target_link_libraries(nameplate PRIVATE scrolls)
+target_include_directories(nameplate PRIVATE ${asio_SOURCE_DIR}/asio/include)
 target_include_directories(nameplate PRIVATE ${scrolls_SOURCE_DIR}/include)
 target_include_directories(nameplate PRIVATE ../common)
 target_include_directories(nameplate PRIVATE ../common/message)

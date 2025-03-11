@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include <deque>
 
 #define ASIO_STANDALONE
@@ -12,12 +11,12 @@
 namespace nameplate
 {
 
-class ServerConnection : public std::enable_shared_from_this<ServerConnection>
+class ServerConnection
 {
 public:
     ServerConnection(asio::io_context& context, asio::ip::tcp::socket socket, std::deque<Message>& msgInQueue);
     ServerConnection(const ServerConnection&) = delete;
-    ~ServerConnection();
+    ~ServerConnection() = default;
 
     ServerConnection operator=(const ServerConnection&) = delete;
 

@@ -3,6 +3,7 @@
 #include <exception>
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace nameplate
 {
@@ -67,7 +68,7 @@ public:
         return m_header.clientId;
     }
 
-    PacketType PacketType() const
+    PacketType GetPacketType() const
     {
         return m_header.packetType;
     }

@@ -1,8 +1,30 @@
+#ifdef NAMEPLATE_PLATFORM_SFML
 #include <stdlib.h>
+#include <filesystem>
+
+#define SCROLLS_USE_LOGGER_MACROS
+#include <Scrolls.h>
+#include "../../PlatformFactory.h"
 #include "DisplaySFML.h"
 
 namespace nameplate
 {
+
+std::unique_ptr<Display> PlatformFactory::CreateDisplay(const unsigned int width, const unsigned int height, const char* name)
+{
+    sf::Font font;
+    if (!font.loadFromFile("resources/Roboto-Regular.ttf"))
+    {
+        const std::filesystem::path fontPath("resources/Roboto-Regular.ttf");
+        ERROR("Could not load font from: " + fontPath.string());
+        return std::unique_ptr<Display>();
+    }
+
+    constexpr unsigned int UPDATE_RATE_FPS = 20;
+    DisplaySFML::Config config(UPDATE_RATE_FPS, font);
+
+    return std::make_unique<DisplaySFML>(width, height, name, config);
+}
 
 DisplaySFML::DisplaySFML(unsigned int width, unsigned int height, const char* name, const Config& config)
     : Display(width, height, name), m_window({ width, height }, name), m_config(config)
@@ -63,3 +85,5 @@ void DisplaySFML::Show()
 }
 
 }
+
+#endif

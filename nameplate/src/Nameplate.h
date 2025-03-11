@@ -1,18 +1,22 @@
 #pragma once
-#include "Display.h"
+#include <memory>
+#include "PlatformFactory.h"
 
 namespace nameplate {
 
 class Nameplate
 {
 public:
-    Nameplate(Display& front, Display& rear);
+    // gonna need to add additional constructors for different types of config
+    // Can't think of a better solution for now
+    Nameplate(const PlatformConfig<TCPNetworkConfig>& config);
 
     void Run();
-
+    
 private:
-    Display& m_frontDisplay;
-    Display& m_rearDisplay;
+    const std::unique_ptr<Display> m_frontDisplay;
+    const std::unique_ptr<Display> m_rearDisplay;
+    const std::unique_ptr<Network> m_network;
 };
 
 }

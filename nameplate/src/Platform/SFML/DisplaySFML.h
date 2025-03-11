@@ -4,19 +4,17 @@
 
 namespace nameplate
 {
-
-
 class DisplaySFML : public Display
 {
 public:
     struct Config
     {
-        constexpr Config(unsigned int updateRate, const sf::Font& font)
+        Config(unsigned int updateRate, const sf::Font& font)
             : updateRate(updateRate), textFont(font)
         {
         }
         unsigned int updateRate;
-        const sf::Font& textFont;
+        const sf::Font textFont;
     };
 
 public:
@@ -30,7 +28,7 @@ public:
 
 private:
     sf::RenderWindow m_window;
-    const Config& m_config;
+    const Config m_config;
 };
 
 }
