@@ -35,6 +35,11 @@ public:
 
     void HandleMessages() override;
 
+    uint32_t ClientId() const override
+    {
+        return m_id;
+    }
+
 private:
     struct Callback
     {

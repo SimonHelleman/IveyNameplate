@@ -8,7 +8,7 @@ class RFID
 {
 public:
     virtual ~RFID() = default;
-    virtual uint32_t GetId() const = 0;
+    virtual uint32_t GetId() = 0;
 };
 
 }

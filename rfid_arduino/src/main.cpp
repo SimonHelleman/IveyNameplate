@@ -32,7 +32,6 @@ void loop()
             snprintf(byte_str, 8, "%02x", buffer[i]);
             Serial.print(byte_str);
         }
-        Serial.println();
         
         s_reader.PICC_HaltA();
         s_reader.PCD_StopCrypto1();

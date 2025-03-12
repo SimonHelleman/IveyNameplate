@@ -39,6 +39,7 @@ set(SOURCE_FILES
     src/Platform/SFML/DisplaySFML.cpp
     src/Platform/ASIO/Client.cpp
     src/Platform/ASIO/ServerConnection.cpp
+    src/Platform/ASIO/SerialRFID.cpp
 )
 
 set(HEADER_FILES
@@ -53,6 +54,7 @@ set(HEADER_FILES
     src/Platform/SFML/DisplaySFML.h
     src/Platform/ASIO/Client.h
     src/Platform/ASIO/ServerConnection.h
+    src/Platform/ASIO/SerialRFID.h
 )
 
 add_executable(nameplate ${SOURCE_FILES} ${HEADER_FILES})
@@ -64,6 +66,10 @@ target_compile_definitions(nameplate PRIVATE
 target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_DESKTOP)
 target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_SFML)
 target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_ASIO)
+
+if (WIN32)
+    target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_WINDOWS)
+endif()
 
 target_link_libraries(nameplate PRIVATE sfml-graphics)
 target_link_libraries(nameplate PRIVATE scrolls)

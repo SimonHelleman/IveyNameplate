@@ -16,8 +16,13 @@ PlatformConfig<TCPNetworkConfig> GetPlatformConfig()
     constexpr unsigned int WINDOW_HEIGHT = 720;
 #endif
 
+#ifdef NAMEPLATE_PLATFORM_WINDOWS
+    const char* serialPort = "COM3"; // This is machine and USB port specific make runtime if possible
+    constexpr unsigned int SERIAL_BAUD_RATE = 9600;
+#endif
+
     const TCPNetworkConfig NETWORK_CONFIG = { "127.0.0.1", 25565 };
-    return PlatformConfig<TCPNetworkConfig>(WINDOW_WIDTH, WINDOW_HEIGHT, NETWORK_CONFIG);
+    return PlatformConfig<TCPNetworkConfig>(WINDOW_WIDTH, WINDOW_HEIGHT, NETWORK_CONFIG, serialPort, SERIAL_BAUD_RATE);
 }
 #endif
 
