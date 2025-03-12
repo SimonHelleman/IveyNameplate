@@ -14,6 +14,7 @@ enum class PacketType : uint16_t
     SetClientId,
     StudentId,
     StudentInfo,
+    StudentNotFound,
     StartPoll,
     EndPoll,
     PollResponse,
@@ -68,7 +69,7 @@ public:
         return m_header.clientId;
     }
 
-    PacketType GetPacketType() const
+    PacketType MessageType() const
     {
         return m_header.packetType;
     }

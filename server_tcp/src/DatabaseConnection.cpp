@@ -108,6 +108,27 @@ void DatabaseConnection::RecordAttendance(uint32_t id, std::chrono::system_clock
 	Query(query.str());
 }
 
+Student DatabaseConnection::FetchStudent(uint32_t id)
+{
+
+	if (!DoesStudentExist(id))
+	{
+		return { };
+	}
+
+	const std::string query = "SELECT * FROM student WHERE student_id=" + std::to_string(id) + ';';
+
+	Query(query);
+
+	const char* studentIdStr = PQgetvalue(m_lastResult, 0, 0);
+	const char* studentLastName = PQgetvalue(m_lastResult, 0, 1);
+	const char* studentFirstName = PQgetvalue(m_lastResult, 0, 2);
+
+	const unsigned int studentId = atoi(studentIdStr);
+
+	return { studentId, studentLastName, studentFirstName };
+}
+
 
 
 }

@@ -7,7 +7,7 @@ namespace nameplate
 struct Student
 {
     uint32_t id;
-    std::string firstName;
     std::string lastName;
+    std::string firstName;
 };
 }

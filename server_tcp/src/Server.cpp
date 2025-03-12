@@ -9,10 +9,10 @@
 namespace nameplate
 {
 
-Server::Server(unsigned int port)
-    : m_port(port), m_connectionAcceptor(m_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port))
+Server::Server(uint16_t port, DatabaseConnection& database)
+    : m_port(port), m_connectionAcceptor(m_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
+    m_database(database)
 {
-    
 }
 
 void Server::Start()
@@ -54,7 +54,7 @@ void Server::AsyncWaitForConnection()
         const std::function<void(const ClientConnection&)> disconHandle = std::bind(&Server::OnDisconnect, this, std::placeholders::_1);
         
         const auto connection = std::make_shared<ClientConnection>(
-            m_context, std::move(socket), ++m_numCommections, m_incomingMessageQueue, disconHandle
+            m_context, std::move(socket), ++m_numConnections, m_incomingMessageQueue, disconHandle
         );
 
         m_connections.push_back(connection);
@@ -75,6 +75,18 @@ void Server::SendMessage(ClientConnection& client, const Message& message)
     }
 
     client.SendMessage(message);
+}
+
+void Server::SendMessage(const uint32_t clientId, const Message& message)
+{
+    const auto it = std::find_if(m_connections.begin(), m_connections.end(), [clientId](const std::shared_ptr<ClientConnection>& c) {
+        return c->Id() == clientId;
+    });
+
+    if (it != m_connections.end())
+    {
+        SendMessage(**it, message);
+    }
 }
 
 void Server::OnConnect(ClientConnection& client)
@@ -105,13 +117,58 @@ void Server::HandleMessages()
 {
     while (!m_incomingMessageQueue.empty())
     {
-        const Message& msg = m_incomingMessageQueue.front();
+        Message& msg = m_incomingMessageQueue.front();
         LOG_DEBUG("[Server] message:\n" + msg.AsString());
 
-        switch (msg.GetPacketType())
+        switch (msg.MessageType())
         {
+        case PacketType::StudentId:
+            {
+                // Query database
+                // if user exists, send data, else, send something else (TBD)
+
+                uint32_t studentId;
+                msg.Pop(&studentId, sizeof(uint32_t), sizeof(uint32_t));
+                const bool exists = m_database.DoesStudentExist(studentId);
+
+                if (exists)
+                {
+                    Student student = m_database.FetchStudent(studentId);
+                    Message resp(PacketType::StudentInfo, msg.ClientId());
+                    resp.Push(&student.id, sizeof(student.id));
+                    resp.Push(student.lastName.c_str(), student.lastName.length() + 1);
+                    resp.Push(student.firstName.c_str(), student.firstName.length() + 1);
+
+                    SendMessage(msg.ClientId(), resp);
+                    break;
+                }
+
+                // Send not found message
+                const Message resp(PacketType::StudentNotFound, msg.ClientId());
+                SendMessage(msg.ClientId(), resp);
+                break;
+            }
+        case PacketType::StudentInfo:
+            {
+                uint32_t studentId;
+                msg.Pop(&studentId, sizeof(uint32_t), sizeof(uint32_t));
+
+                // Contains two null terminated strings
+                std::vector<uint8_t> buf(msg.PayloadSize());
+                msg.Pop(buf.data(), buf.size(), msg.PayloadSize());
+                
+                const auto lastNameNullTerm = std::find(buf.begin(), buf.end(), '\0');
+                const auto firstNameNullTerm = std::find(lastNameNullTerm + 1, buf.end(), '\0');
+
+                const char* lastName = reinterpret_cast<const char*>(&buf[0]);
+                const char* firstName = reinterpret_cast<const char*>(&buf[lastNameNullTerm - buf.begin() + 1]);
+
+                m_database.CreateStudent(studentId, lastName, firstName);
+            }
         default:
-            ERROR_FL("[Server] message is an unknown type and can not be handled");
+            {
+                ERROR_FL("[Server] message is an unknown type and can not be handled");
+            }
         }
 
         m_incomingMessageQueue.pop_front();

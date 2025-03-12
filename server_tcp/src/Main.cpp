@@ -36,9 +36,7 @@ int main()
     logger.AddOutput(scrolls::LogLevel::Warning | scrolls::LogLevel::Error, scrolls::Logger::StandardErrorOutput);
 
     nameplate::DatabaseConnection database("nameplate_db", "postgres", DB_PASSWORD);
-    database.DoesStudentExist(123);
-    database.RecordAttendance(123, std::chrono::system_clock::now());
-
+    
     std::thread consoleListen(ConsoleThread);
 
     crow::SimpleApp webAPI;
@@ -47,9 +45,12 @@ int main()
         return "hello world";
     });
 
-    auto tmp = webAPI.port(18080).multithreaded().run_async();
+    constexpr uint16_t WEB_API_PORT = 18080;
+    constexpr uint16_t SERVER_PORT = 25565;
 
-    nameplate::Server s(25565);
+    auto tmp = webAPI.port(WEB_API_PORT).multithreaded().run_async();
+
+    nameplate::Server s(SERVER_PORT, database);
     s.Start();
 
     while (!g_shouldEnd)

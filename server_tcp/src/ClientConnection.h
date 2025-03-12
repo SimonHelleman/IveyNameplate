@@ -8,6 +8,11 @@
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
 
+// ASIO includes windows API which is annoying
+#ifdef SendMessage
+#undef SendMessage
+#endif
+
 #include "Message.h"
 
 namespace nameplate
