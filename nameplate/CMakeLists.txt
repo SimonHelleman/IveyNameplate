@@ -34,6 +34,7 @@ FetchContent_MakeAvailable(scrolls)
 
 set(SOURCE_FILES
     src/Nameplate.cpp
+    src/VirtualKeyboard.cpp
     src/Platform/PlatformConfig.cpp
     src/Platform/Desktop/EntryDesktop.cpp
     src/Platform/SFML/DisplaySFML.cpp
@@ -47,6 +48,7 @@ set(HEADER_FILES
     ../common/message/Message.cpp
     src/PlatformFactory.h
     src/Display.h
+    src/VirtualKeyboard.h
     src/Nameplate.h
     src/Network.h
     src/RFID.h

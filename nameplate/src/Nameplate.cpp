@@ -15,6 +15,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_rearDisplay(PlatformFactory::CreateDisplay(config.displayWidth, config.displayHeight, "nameplate_rear")),
     m_network(PlatformFactory::CreateNetwork<TCPNetworkConfig>(config.networkConfig)),
     m_card(PlatformFactory::CreateRFID(config.serialPort, config.serialBaudRate)),
+    m_keyboard(config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2),
     m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
     m_cardThread()
 {
@@ -86,6 +87,7 @@ void Nameplate::IdleStatePeriodic()
     const unsigned int centerX = m_frontDisplay->Width() / 2;
     const unsigned int centerY = m_frontDisplay->Height() / 2;
     m_rearDisplay->DrawText(centerX, centerY, 20, {}, "Tap Student ID card to begin");
+    m_keyboard.Draw(*m_rearDisplay, 0, 0, { 255, 255, 255 }, { });
 
     if (m_readId)
     {

@@ -73,6 +73,20 @@ void DisplaySFML::DrawText(unsigned int posX, unsigned int posY, unsigned int si
     m_window.draw(txt);
 }
 
+void DisplaySFML::FillRectangle(
+    const float posX, const float posY, const float width, const float height, 
+    const RGBA fill, const RGBA outlineColor, const float outlineThickness
+)
+{
+    sf::RectangleShape rect(sf::Vector2f(width, height));
+    rect.setPosition(posX, posY);
+    rect.setFillColor(sf::Color(fill.r, fill.g, fill.b, fill.a));
+    rect.setOutlineColor(sf::Color(outlineColor.r, outlineColor.g, outlineColor.b, outlineColor.a));
+    rect.setOutlineThickness(outlineThickness);
+
+    m_window.draw(rect);
+}
+
 void DisplaySFML::Clear(RGB color)
 {
     m_window.clear({ color.r, color.g, color.b });

@@ -22,7 +22,13 @@ public:
     DisplaySFML(unsigned int width, unsigned int height, const char* name, const Config& config);
 
     void HandleEvents() override;
+    
     void DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const std::string& text) override;
+    void FillRectangle(
+        const float posX, const float posY, const float width, const float height,
+        const RGBA fill, const RGBA outlineColor, const float outlineThickness
+    ) override;
+
     void Clear(RGB color) override;
     void Show() override;
 

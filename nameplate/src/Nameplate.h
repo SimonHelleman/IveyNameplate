@@ -9,6 +9,7 @@
 
 #include "PlatformFactory.h"
 #include "Student.h"
+#include "VirtualKeyboard.h"
 
 namespace nameplate {
 
@@ -53,6 +54,8 @@ private:
     const std::unique_ptr<Display> m_rearDisplay;
     const std::unique_ptr<Network> m_network;
     const std::unique_ptr<RFID> m_card;
+
+    const VirtualKeyboard m_keyboard;
 
     bool m_stateTransition;
     State m_currentState;

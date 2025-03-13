@@ -32,7 +32,13 @@ public:
 
     // To be implemented by specific implementation
     virtual void HandleEvents() = 0;
+    
     virtual void DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const std::string& text) = 0;
+    virtual void FillRectangle(
+        const float posX, const float posY, const float width, const float height,
+        const RGBA fill, const RGBA outlineColor, const float outlineThickness
+    ) = 0;
+
     virtual void Clear(RGB color) = 0;
     virtual void Show() = 0;
 
