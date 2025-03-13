@@ -123,56 +123,72 @@ void Server::HandleMessages()
         switch (msg.MessageType())
         {
         case PacketType::StudentId:
-            {
-                // Query database
-                // if user exists, send data, else, send something else (TBD)
-
-                uint32_t studentId;
-                msg.Pop(&studentId, sizeof(uint32_t), sizeof(uint32_t));
-                const bool exists = m_database.DoesStudentExist(studentId);
-
-                if (exists)
-                {
-                    Student student = m_database.FetchStudent(studentId);
-                    Message resp(PacketType::StudentInfo, msg.ClientId());
-                    resp.Push(&student.id, sizeof(student.id));
-                    resp.Push(student.lastName.c_str(), student.lastName.length() + 1);
-                    resp.Push(student.firstName.c_str(), student.firstName.length() + 1);
-
-                    SendMessage(msg.ClientId(), resp);
-                    break;
-                }
-
-                // Send not found message
-                const Message resp(PacketType::StudentNotFound, msg.ClientId());
-                SendMessage(msg.ClientId(), resp);
-                break;
-            }
+            HandleStudentId(msg);
+            break;
         case PacketType::StudentInfo:
-            {
-                uint32_t studentId;
-                msg.Pop(&studentId, sizeof(uint32_t), sizeof(uint32_t));
-
-                // Contains two null terminated strings
-                std::vector<uint8_t> buf(msg.PayloadSize());
-                msg.Pop(buf.data(), buf.size(), msg.PayloadSize());
-                
-                const auto lastNameNullTerm = std::find(buf.begin(), buf.end(), '\0');
-                const auto firstNameNullTerm = std::find(lastNameNullTerm + 1, buf.end(), '\0');
-
-                const char* lastName = reinterpret_cast<const char*>(&buf[0]);
-                const char* firstName = reinterpret_cast<const char*>(&buf[lastNameNullTerm - buf.begin() + 1]);
-
-                m_database.CreateStudent(studentId, lastName, firstName);
-            }
+            HandleStudentInfo(msg);
+            break;
         default:
-            {
-                ERROR_FL("[Server] message is an unknown type and can not be handled");
-            }
+            ERROR_FL("[Server] message is an unknown type and can not be handled");
         }
 
         m_incomingMessageQueue.pop_front();
     }
+}
+
+void Server::HandleStudentId(Message& msg)
+{
+    // Query database
+    // if user exists, send data, else, send something else (TBD)
+
+    uint32_t studentId;
+    msg.Pop(&studentId, sizeof(uint32_t), sizeof(uint32_t));
+    const bool exists = m_database.DoesStudentExist(studentId);
+
+    if (exists)
+    {
+        Student student = m_database.FetchStudent(studentId);
+        Message resp(PacketType::StudentInfo, msg.ClientId());
+
+        // 4 bytes of length info for the packet (2 per string)
+        const uint16_t lastNameBufSz = static_cast<uint16_t>(student.lastName.length() + 1);
+        const uint16_t firstNameBufSz = static_cast<uint16_t>(student.firstName.length() + 1);
+
+        resp.Push(&student.id, sizeof(student.id));
+        resp.Push(student.lastName.c_str(), lastNameBufSz);
+        resp.Push(student.firstName.c_str(), firstNameBufSz);
+        resp.Push(&lastNameBufSz, sizeof(lastNameBufSz));
+        resp.Push(&firstNameBufSz, sizeof(firstNameBufSz));
+
+
+        SendMessage(msg.ClientId(), resp);
+        return;
+    }
+
+    // Send not found message
+    const Message resp(PacketType::StudentNotFound, msg.ClientId());
+    SendMessage(msg.ClientId(), resp);
+}
+
+void Server::HandleStudentInfo(Message& msg)
+{
+    uint16_t firstNameSize;
+    msg.Pop(&firstNameSize, sizeof(firstNameSize), sizeof(firstNameSize));
+
+    uint16_t lastNameSize;
+    msg.Pop(&lastNameSize, sizeof(lastNameSize), sizeof(lastNameSize));
+
+    // Pop strings into a vector
+    std::vector<uint8_t> buf(firstNameSize + lastNameSize);
+    msg.Pop(buf.data(), buf.size(), firstNameSize + lastNameSize);
+
+    const char* lastName = reinterpret_cast<const char*>(&buf[0]);
+    const char* firstName = reinterpret_cast<const char*>(&buf[lastNameSize]);
+
+    uint32_t studentId;
+    msg.Pop(&studentId, sizeof(uint32_t), sizeof(studentId));
+
+    m_database.CreateStudent(studentId, lastName, firstName);
 }
 
 }

@@ -31,7 +31,7 @@ public:
 
     void SendToServer(const Message& msg) override;
 
-    void SubscribeToPacket(const PacketType packet, std::function<void(const Message&)> eventHandler) override;
+    void SubscribeToPacket(const PacketType packet, std::function<void(Message&)> eventHandler) override;
 
     void HandleMessages() override;
 
@@ -43,13 +43,13 @@ public:
 private:
     struct Callback
     {
-        Callback(const PacketType packet, const std::function<void(const Message& msg)> callback)
+        Callback(const PacketType packet, const std::function<void(Message& msg)> callback)
             : packet(packet), eventHandler(callback)
         {
         }
 
         const PacketType packet;
-        const std::function<void(const Message& msg)> eventHandler;
+        const std::function<void(Message& msg)> eventHandler;
     };
 
 private:

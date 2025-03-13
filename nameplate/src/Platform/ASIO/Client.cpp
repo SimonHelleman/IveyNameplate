@@ -73,7 +73,7 @@ void Client::SendToServer(const Message& msg)
     }
 }
 
-void Client::SubscribeToPacket(const PacketType packet, std::function<void(const Message&)> eventHandler)
+void Client::SubscribeToPacket(const PacketType packet, std::function<void(Message&)> eventHandler)
 {
     m_callbacks.emplace_back(packet, eventHandler);
 }
@@ -82,17 +82,17 @@ void Client::HandleMessages()
 {
     while (!m_incomingMessageQueue.empty())
     {
-        const Message& msg = m_incomingMessageQueue.front();
+        Message& msg = m_incomingMessageQueue.front();
         LOG_DEBUG("[Client] message:\n" + msg.AsString());
 
-        if (msg.GetPacketType() == PacketType::SetClientId)
+        if (msg.MessageType() == PacketType::SetClientId)
         {
             m_id = msg.ClientId();
         }
 
         for (const auto& c : m_callbacks)
         {
-            if (msg.GetPacketType() == c.packet)
+            if (msg.MessageType() == c.packet)
             {
                 c.eventHandler(msg);
             }

@@ -53,7 +53,7 @@ void DisplaySFML::HandleEvents()
 }
 
 // x, y is position of origin of text. 
-void DisplaySFML::DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const char* text)
+void DisplaySFML::DrawText(unsigned int posX, unsigned int posY, unsigned int size, RGBA color, const std::string& text)
 {
     const sf::Color fill(color.r, color.g, color.b, color.a);
     

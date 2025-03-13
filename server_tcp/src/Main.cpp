@@ -65,6 +65,7 @@ int main()
     }
 
     s.Stop();
+    webAPI.stop();
 
     return 0;
 }

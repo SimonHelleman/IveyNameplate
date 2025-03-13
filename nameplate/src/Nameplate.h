@@ -8,6 +8,7 @@
 #include <Scrolls.h>
 
 #include "PlatformFactory.h"
+#include "Student.h"
 
 namespace nameplate {
 
@@ -58,6 +59,8 @@ private:
 
     bool m_readId;
     uint32_t m_currentId;
+
+    Student m_currentStudent;
 
     std::unique_ptr<std::thread> m_cardThread;
 

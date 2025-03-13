@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include <ctime>
 #include <sstream>
 #include <stdexcept>
@@ -124,7 +125,7 @@ Student DatabaseConnection::FetchStudent(uint32_t id)
 	const char* studentLastName = PQgetvalue(m_lastResult, 0, 1);
 	const char* studentFirstName = PQgetvalue(m_lastResult, 0, 2);
 
-	const unsigned int studentId = atoi(studentIdStr);
+	const uint32_t studentId = strtoul(studentIdStr, nullptr, 10);
 
 	return { studentId, studentLastName, studentFirstName };
 }

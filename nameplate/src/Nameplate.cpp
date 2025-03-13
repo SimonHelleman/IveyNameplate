@@ -15,10 +15,30 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_rearDisplay(PlatformFactory::CreateDisplay(config.displayWidth, config.displayHeight, "nameplate_rear")),
     m_network(PlatformFactory::CreateNetwork<TCPNetworkConfig>(config.networkConfig)),
     m_card(PlatformFactory::CreateRFID(config.serialPort, config.serialBaudRate)),
-    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_cardThread()
+    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
+    m_cardThread()
 {
-    m_network->SubscribeToPacket(PacketType::SetClientId, [this](const Message& msg) {
-        TestHandler(msg);
+    m_network->SubscribeToPacket(PacketType::StudentInfo, [this](Message& msg) {        
+        uint16_t firstNameSize;
+        msg.Pop(&firstNameSize, sizeof(firstNameSize), sizeof(firstNameSize));
+
+        uint16_t lastNameSize;
+        msg.Pop(&lastNameSize, sizeof(lastNameSize), sizeof(lastNameSize));
+
+        // Pop strings into a vector
+        std::vector<uint8_t> buf(firstNameSize + lastNameSize);
+        msg.Pop(buf.data(), buf.size(), firstNameSize + lastNameSize);
+
+        const char* lastName = reinterpret_cast<const char*>(&buf[0]);
+        const char* firstName = reinterpret_cast<const char*>(&buf[lastNameSize]);
+
+        uint32_t studentId;
+        msg.Pop(&studentId, sizeof(uint32_t), sizeof(studentId));
+
+        m_currentStudent = Student(studentId, lastName, firstName);
+
+        m_currentState = State::Name;
+        m_stateTransition = true;
     });
 
 }
@@ -77,7 +97,6 @@ void Nameplate::IdleStatePeriodic()
 
 
         // Send Student ID message
-
         Message studentIdMessage(PacketType::StudentId, m_network->ClientId());
         studentIdMessage.Push(&m_currentId, sizeof(uint32_t));
 
@@ -91,6 +110,7 @@ void Nameplate::IdleStatePeriodic()
 
 void Nameplate::NameStateInit()
 {
+    LOG_DEBUG("[Namplate] Name state init");
 }
 
 void Nameplate::NameStatePeriodic()
@@ -98,13 +118,12 @@ void Nameplate::NameStatePeriodic()
     const unsigned int centerX = m_frontDisplay->Width() / 2;
     const unsigned int centerY = m_frontDisplay->Height() / 2;
     constexpr unsigned int NAME_FONT_SIZE = 400;
-    const char* name = "Kyle";
-    const char* course = "BUS 1299E";
 
-    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, {}, name);
+    std::string fullName = std::string(m_currentStudent.firstName) + ' ' + std::string(m_currentStudent.lastName);
 
-    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 2, {}, course);
-    m_rearDisplay->DrawText(centerX, centerY + 100, NAME_FONT_SIZE / 3, {}, name);
+    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, {}, m_currentStudent.firstName.c_str());
+
+    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, {}, fullName.c_str());
 }
 
 }

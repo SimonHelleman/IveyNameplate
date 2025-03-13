@@ -44,6 +44,10 @@ public:
     void HandleMessages();
 
 private:
+    void HandleStudentId(Message& msg);
+    void HandleStudentInfo(Message& msg);
+
+private:
     uint16_t m_port;
     unsigned int m_numConnections = 0;
 
