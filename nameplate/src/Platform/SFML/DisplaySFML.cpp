@@ -98,6 +98,17 @@ void DisplaySFML::Show()
     m_window.display();
 }
 
+std::pair<int, int> DisplaySFML::GetTouchPos() const
+{
+    const sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+    return std::pair<int, int>(mousePos.x, mousePos.y);
+}
+
+bool DisplaySFML::IsTouched() const
+{
+    return sf::Mouse::isButtonPressed(sf::Mouse::Left);
+}
+
 }
 
 #endif

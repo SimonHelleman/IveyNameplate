@@ -8,6 +8,7 @@
 #include <Scrolls.h>
 
 #include "PlatformFactory.h"
+#include "Touch.h"
 #include "Student.h"
 #include "VirtualKeyboard.h"
 
@@ -54,6 +55,7 @@ private:
     const std::unique_ptr<Display> m_rearDisplay;
     const std::unique_ptr<Network> m_network;
     const std::unique_ptr<RFID> m_card;
+    const Touch* m_touch;
 
     const VirtualKeyboard m_keyboard;
 

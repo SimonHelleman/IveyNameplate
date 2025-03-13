@@ -48,6 +48,7 @@ set(HEADER_FILES
     ../common/message/Message.cpp
     src/PlatformFactory.h
     src/Display.h
+    src/Touch.h
     src/VirtualKeyboard.h
     src/Nameplate.h
     src/Network.h

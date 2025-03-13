@@ -2,10 +2,14 @@
 #include <string>
 #include <SFML/Graphics.hpp>
 #include "../../Display.h"
+#include "../../Touch.h"
 
 namespace nameplate
 {
-class DisplaySFML : public Display
+
+// Multiinheritance... I know... bad, but Touch is a pure interface
+// so this is actually something you can do in Java
+class DisplaySFML : public Display, public Touch
 {
 public:
     struct Config
@@ -31,6 +35,9 @@ public:
 
     void Clear(RGB color) override;
     void Show() override;
+
+    std::pair<int, int> GetTouchPos() const override;
+    bool IsTouched() const override;
 
 
 private:

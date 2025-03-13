@@ -15,6 +15,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_rearDisplay(PlatformFactory::CreateDisplay(config.displayWidth, config.displayHeight, "nameplate_rear")),
     m_network(PlatformFactory::CreateNetwork<TCPNetworkConfig>(config.networkConfig)),
     m_card(PlatformFactory::CreateRFID(config.serialPort, config.serialBaudRate)),
+    m_touch(dynamic_cast<Touch*>(m_rearDisplay.get())), // Yet another area where my attempts to keep this ultra potrable fails
     m_keyboard(config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2),
     m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
     m_cardThread()
