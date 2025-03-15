@@ -85,7 +85,10 @@ void Nameplate::Run()
 
 void Nameplate::IdleStateInit()
 {
-    m_cardThread = std::make_unique<std::thread>(RFIDThread, m_card.get(), std::ref(m_currentId), std::ref(m_readId));
+    if (m_card)
+    {
+        m_cardThread = std::make_unique<std::thread>(RFIDThread, m_card.get(), std::ref(m_currentId), std::ref(m_readId));
+    }
 }
 
 void Nameplate::IdleStatePeriodic()

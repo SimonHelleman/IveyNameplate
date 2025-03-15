@@ -19,7 +19,10 @@ void ServerConnection::Connect(const asio::ip::tcp::resolver::results_type& endp
         {
             m_ipAddr = m_socket.remote_endpoint().address();
             AsyncReceiveHeader();
+            return;
         }
+
+        ERROR("[ServerConnection] failed to connect to server");
     });
 }
 

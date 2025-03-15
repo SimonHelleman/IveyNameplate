@@ -9,7 +9,17 @@ namespace nameplate
 
 std::unique_ptr<RFID> PlatformFactory::CreateRFID(const char* serialPort, const unsigned int baudRate)
 {
-    return std::make_unique<SerialRFID>(serialPort, baudRate);
+    try
+    {
+        auto obj = std::make_unique<SerialRFID>(serialPort, baudRate);
+        return obj;
+    }
+    catch (const std::exception& e)
+    {
+        ERROR("[SerialRFID] Could not connect to RFID Reader");
+    }
+
+    return std::unique_ptr<RFID>();
 }
 
 SerialRFID::SerialRFID(const char* serialPort, const unsigned int baudRate)
