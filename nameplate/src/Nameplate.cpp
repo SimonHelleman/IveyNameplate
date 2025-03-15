@@ -3,6 +3,11 @@
 namespace nameplate
 {
 
+static const RGBA s_white32 = { 255, 255, 255 };
+static const RGBA s_black32 = { };
+static const RGB s_white24 = { 255, 255, 255 };
+static const RGB s_black24 = { };
+
 void RFIDThread(RFID* rfid, uint32_t& id, bool& end)
 {
     end = false;
@@ -16,7 +21,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_network(PlatformFactory::CreateNetwork<TCPNetworkConfig>(config.networkConfig)),
     m_card(PlatformFactory::CreateRFID(config.serialPort, config.serialBaudRate)),
     m_touch(dynamic_cast<Touch*>(m_rearDisplay.get())), // Yet another area where my attempts to keep this ultra potrable fails
-    m_keyboard(config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2),
+    m_keyboard(0, 0, config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2),
     m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
     m_cardThread()
 {
@@ -60,8 +65,8 @@ void Nameplate::Run()
 
         m_network->HandleMessages();
 
-        m_frontDisplay->Clear({ 255, 255, 255 });
-        m_rearDisplay->Clear( { 255, 255, 255 });
+        m_frontDisplay->Clear(s_white24);
+        m_rearDisplay->Clear(s_white24);
 
         if (m_stateTransition)
         {
@@ -87,8 +92,11 @@ void Nameplate::IdleStatePeriodic()
 {
     const unsigned int centerX = m_frontDisplay->Width() / 2;
     const unsigned int centerY = m_frontDisplay->Height() / 2;
-    m_rearDisplay->DrawText(centerX, centerY, 20, {}, "Tap Student ID card to begin");
-    m_keyboard.Draw(*m_rearDisplay, 0, 0, { 255, 255, 255 }, { });
+    
+    m_rearDisplay->DrawText(centerX, centerY, 20, s_black32, "Tap Student ID card to begin");
+    m_keyboard.Draw(*m_rearDisplay, s_white32, s_black32);
+
+    m_keyboard.Update(*m_touch);
 
     if (m_readId)
     {
@@ -124,9 +132,9 @@ void Nameplate::NameStatePeriodic()
 
     std::string fullName = std::string(m_currentStudent.firstName) + ' ' + std::string(m_currentStudent.lastName);
 
-    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, {}, m_currentStudent.firstName.c_str());
+    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, s_black32, m_currentStudent.firstName.c_str());
 
-    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, {}, fullName.c_str());
+    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, s_black32, fullName.c_str());
 }
 
 }

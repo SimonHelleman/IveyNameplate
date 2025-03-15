@@ -57,7 +57,7 @@ private:
     const std::unique_ptr<RFID> m_card;
     const Touch* m_touch;
 
-    const VirtualKeyboard m_keyboard;
+    VirtualKeyboard m_keyboard;
 
     bool m_stateTransition;
     State m_currentState;

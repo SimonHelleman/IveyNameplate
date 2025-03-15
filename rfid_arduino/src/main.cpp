@@ -28,9 +28,9 @@ void loop()
 
         for (uint8_t i = 0; i < bufferSize; ++i)
         {
-            char byte_str[8];
-            snprintf(byte_str, 8, "%02x", buffer[i]);
-            Serial.print(byte_str);
+            char byteStr[8];
+            snprintf(byteStr, 8, "%02x", buffer[i]);
+            Serial.print(byteStr);
         }
         
         s_reader.PICC_HaltA();
