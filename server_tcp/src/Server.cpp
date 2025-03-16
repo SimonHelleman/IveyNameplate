@@ -136,6 +136,24 @@ void Server::HandleMessages()
     }
 }
 
+void Server::SendStudentInfo(const uint32_t clientId, const uint32_t studentId)
+{
+    Student student = m_database.FetchStudent(studentId);
+    Message resp(PacketType::StudentInfo, clientId);
+
+    // 4 bytes of length info for the packet (2 per string)
+    const uint16_t lastNameBufSz = static_cast<uint16_t>(student.lastName.length() + 1);
+    const uint16_t firstNameBufSz = static_cast<uint16_t>(student.firstName.length() + 1);
+
+    resp.Push(&student.id, sizeof(student.id));
+    resp.Push(student.lastName.c_str(), lastNameBufSz);
+    resp.Push(student.firstName.c_str(), firstNameBufSz);
+    resp.Push(&lastNameBufSz, sizeof(lastNameBufSz));
+    resp.Push(&firstNameBufSz, sizeof(firstNameBufSz));
+
+    SendMessage(clientId, resp);
+}
+
 void Server::HandleStudentId(Message& msg)
 {
     // Query database
@@ -147,21 +165,7 @@ void Server::HandleStudentId(Message& msg)
 
     if (exists)
     {
-        Student student = m_database.FetchStudent(studentId);
-        Message resp(PacketType::StudentInfo, msg.ClientId());
-
-        // 4 bytes of length info for the packet (2 per string)
-        const uint16_t lastNameBufSz = static_cast<uint16_t>(student.lastName.length() + 1);
-        const uint16_t firstNameBufSz = static_cast<uint16_t>(student.firstName.length() + 1);
-
-        resp.Push(&student.id, sizeof(student.id));
-        resp.Push(student.lastName.c_str(), lastNameBufSz);
-        resp.Push(student.firstName.c_str(), firstNameBufSz);
-        resp.Push(&lastNameBufSz, sizeof(lastNameBufSz));
-        resp.Push(&firstNameBufSz, sizeof(firstNameBufSz));
-
-
-        SendMessage(msg.ClientId(), resp);
+        SendStudentInfo(msg.ClientId(), studentId);
         return;
     }
 
@@ -189,6 +193,8 @@ void Server::HandleStudentInfo(Message& msg)
     msg.Pop(&studentId, sizeof(uint32_t), sizeof(studentId));
 
     m_database.CreateStudent(studentId, lastName, firstName);
+
+    SendStudentInfo(msg.ClientId(), studentId);
 }
 
 }

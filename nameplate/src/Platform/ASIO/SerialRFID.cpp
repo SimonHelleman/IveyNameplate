@@ -16,9 +16,9 @@ std::unique_ptr<RFID> PlatformFactory::CreateRFID(const char* serialPort, const 
     }
     catch (const std::exception& e)
     {
-        ERROR("[SerialRFID] Could not connect to RFID Reader");
     }
 
+    ERROR("[SerialRFID] Could not connect to RFID Reader");
     return std::unique_ptr<RFID>();
 }
 

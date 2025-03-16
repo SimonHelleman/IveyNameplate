@@ -35,6 +35,7 @@ FetchContent_MakeAvailable(scrolls)
 set(SOURCE_FILES
     src/Nameplate.cpp
     src/VirtualKeyboard.cpp
+    src/Util/MiscUtil.cpp
     src/Platform/PlatformConfig.cpp
     src/Platform/Desktop/EntryDesktop.cpp
     src/Platform/SFML/DisplaySFML.cpp
@@ -54,6 +55,7 @@ set(HEADER_FILES
     src/Network.h
     src/RFID.h
     src/Util/Color.h
+    src/Util/MiscUtil.h
     src/Platform/SFML/DisplaySFML.h
     src/Platform/ASIO/Client.h
     src/Platform/ASIO/ServerConnection.h

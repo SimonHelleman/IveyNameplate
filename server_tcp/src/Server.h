@@ -44,6 +44,8 @@ public:
     void HandleMessages();
 
 private:
+    void SendStudentInfo(const uint32_t clientId, const uint32_t studentId);
+
     void HandleStudentId(Message& msg);
     void HandleStudentInfo(Message& msg);
 

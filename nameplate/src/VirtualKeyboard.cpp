@@ -1,7 +1,7 @@
 #include <ctype.h>
 #include <string.h>
+#include "Util/MiscUtil.h"
 #include "VirtualKeyboard.h"
-#define LAYOUT_ROWS 3
 
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
@@ -9,26 +9,15 @@
 namespace nameplate
 {
 
-static const char* s_layout[LAYOUT_ROWS] = {
-    { "QWERTYUIOP" },
+static const char* s_layout[] = {
+    { "QWERTYUIOP<" },
     { "ASDFGHJKL" },
     { "^ZXCVBNM_" }
 };
 
 static constexpr char SHIFT_SYMBOL = '^';
 static constexpr char SPACE_SYMBOL = '_';
-
-static bool RectOverlapTest(
-    const float x1, const float y1, const float w1, const float h1,
-    const float x2, const float y2, const float w2, const float h2 
-)
-{
-    const bool overlapX = x1 + w1 >= x2 && x2 + w2 >= x1;
-    const bool overlapY = y1 + h1 >= y2 && y2 + h2 >= y1;
-
-    return overlapX && overlapY;
-}
-
+static constexpr char BACKS_SYMBOL = '<';
 
 VirtualKeyboard::VirtualKeyboard(const float posX, const float posY,
     const float keyWidth, const float keyHeight, const float keyPadding, const int outlineThickness
@@ -74,7 +63,19 @@ void VirtualKeyboard::Update(const Touch& touch)
         {
             if (k.label == SHIFT_SYMBOL)
             {
+
                 m_shift = !m_shift; // toggle shift
+                break;
+            }
+
+            if (k.label == BACKS_SYMBOL)
+            {
+                if (!m_text.empty())
+                {
+                    m_text.pop_back();
+                }
+
+                break;
             }
 
             if (k.label == SPACE_SYMBOL)

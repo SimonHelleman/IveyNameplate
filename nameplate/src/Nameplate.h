@@ -22,7 +22,8 @@ public:
         Idle,
         Name,
         Poll,
-        CreateUser,
+        CreateStudentLastName,
+        CreateStudentFirstName,
         CreateGuest
     };
 
@@ -49,6 +50,15 @@ private:
 
     void NameStateInit();
     void NameStatePeriodic();
+
+    void NamePrompt(const char* name);
+
+    // lazy substates... just treat them as full states
+    void CreateStudentLastNameInit();
+    void CreateStudentLastNamePeriodic();
+
+    void CreateStudentFirstNameInit();
+    void CreateStudentFirstNamePeriodic();
     
 private:
     const std::unique_ptr<Display> m_frontDisplay;
@@ -58,6 +68,8 @@ private:
     const Touch* m_touch;
 
     VirtualKeyboard m_keyboard;
+    std::string m_inputLastName;
+    std::string m_inputFirstName;
 
     bool m_stateTransition;
     State m_currentState;
@@ -71,7 +83,9 @@ private:
 
     const std::unordered_map<State, StateHandler> m_stateHandler = {
         { State::Idle, { std::bind(&Nameplate::IdleStateInit, this), std::bind(&Nameplate::IdleStatePeriodic, this) } },
-        { State::Name, { std::bind(&Nameplate::NameStateInit, this), std::bind(&Nameplate::NameStatePeriodic, this) } }
+        { State::Name, { std::bind(&Nameplate::NameStateInit, this), std::bind(&Nameplate::NameStatePeriodic, this) } },
+        { State::CreateStudentLastName, { std::bind(&Nameplate::CreateStudentLastNameInit, this), std::bind(&Nameplate::CreateStudentLastNamePeriodic, this) } },
+        { State::CreateStudentFirstName, { std::bind(&Nameplate::CreateStudentFirstNameInit, this), std::bind(&Nameplate::CreateStudentFirstNamePeriodic, this) } },
     };
 };
 

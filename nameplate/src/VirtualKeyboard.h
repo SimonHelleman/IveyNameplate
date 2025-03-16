@@ -23,6 +23,9 @@ public:
         return m_text;
     }
 
+public:
+    static constexpr int LAYOUT_ROWS = 3;
+
 private:
     struct Key
     {
