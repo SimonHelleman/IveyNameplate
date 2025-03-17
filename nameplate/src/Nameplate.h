@@ -51,14 +51,15 @@ private:
     void NameStateInit();
     void NameStatePeriodic();
 
-    void NamePrompt(const char* name);
-
     // lazy substates... just treat them as full states
     void CreateStudentLastNameInit();
     void CreateStudentLastNamePeriodic();
 
     void CreateStudentFirstNameInit();
     void CreateStudentFirstNamePeriodic();
+
+    void PollStateInit();
+    void PollStatePeriodic();
     
 private:
     const std::unique_ptr<Display> m_frontDisplay;
@@ -79,6 +80,8 @@ private:
 
     Student m_currentStudent;
 
+    int m_numPollOptions;
+
     std::unique_ptr<std::thread> m_cardThread;
 
     const std::unordered_map<State, StateHandler> m_stateHandler = {
@@ -86,6 +89,7 @@ private:
         { State::Name, { std::bind(&Nameplate::NameStateInit, this), std::bind(&Nameplate::NameStatePeriodic, this) } },
         { State::CreateStudentLastName, { std::bind(&Nameplate::CreateStudentLastNameInit, this), std::bind(&Nameplate::CreateStudentLastNamePeriodic, this) } },
         { State::CreateStudentFirstName, { std::bind(&Nameplate::CreateStudentFirstNameInit, this), std::bind(&Nameplate::CreateStudentFirstNamePeriodic, this) } },
+        { State::Poll, { std::bind(&Nameplate::PollStateInit, this), std::bind(&Nameplate::PollStatePeriodic, this) } },
     };
 };
 

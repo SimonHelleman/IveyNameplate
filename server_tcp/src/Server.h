@@ -37,6 +37,7 @@ public:
 
     void SendMessage(ClientConnection& client, const Message& message);
     void SendMessage(const uint32_t clientId, const Message& message);
+    void BroadcastMessage(const Message& message);
 
     void OnConnect(ClientConnection& client);
     void OnDisconnect(const ClientConnection& client);

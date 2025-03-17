@@ -28,7 +28,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_keyboard(2, config.displayHeight - (VirtualKeyboard::LAYOUT_ROWS * (config.displayWidth / 20)) - config.displayWidth / 200 - 12, 
         config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2
     ),
-    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
+    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(), m_numPollOptions(0),
     m_cardThread()
 {
     m_network->SubscribeToPacket(PacketType::StudentInfo, [this](Message& msg) {        
@@ -58,6 +58,15 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_network->SubscribeToPacket(PacketType::StudentNotFound, [this](Message& msg) {
         m_currentState = State::CreateStudentLastName;
         m_stateTransition = true;
+    });
+
+    m_network->SubscribeToPacket(PacketType::StartPoll, [this](Message& msg) {
+        if (m_currentState == State::Name)
+        {
+            msg.Pop(&m_numPollOptions, sizeof(m_numPollOptions), sizeof(m_numPollOptions));
+            m_currentState = State::Poll;
+            m_stateTransition = true;
+        }
     });
 
 }
@@ -231,6 +240,16 @@ void Nameplate::CreateStudentFirstNamePeriodic()
 
         m_network->SendToServer(resp);
     }
+}
+
+void Nameplate::PollStateInit()
+{
+    LOG_DEBUG("[Nameplate] poll state init");
+}
+
+void Nameplate::PollStatePeriodic()
+{
+    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, m_rearDisplay->Height() / 2, 20, BLACK24, "Poll + " + std::to_string(m_numPollOptions));
 }
 
 }

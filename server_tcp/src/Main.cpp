@@ -1,3 +1,4 @@
+#include <string>
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -39,19 +40,43 @@ int main()
     
     std::thread consoleListen(ConsoleThread);
 
+    constexpr uint16_t WEB_API_PORT = 18080;
+    constexpr uint16_t SERVER_PORT = 25565;
+
+    nameplate::Server s(SERVER_PORT, database);
+    s.Start();
+
     crow::SimpleApp webAPI;
+    auto tmp = webAPI.port(WEB_API_PORT).multithreaded().run_async();
 
     CROW_ROUTE(webAPI, "/")([]() {
         return "hello world";
     });
 
-    constexpr uint16_t WEB_API_PORT = 18080;
-    constexpr uint16_t SERVER_PORT = 25565;
+    CROW_ROUTE(webAPI, "/nameplate/startpoll")([&](const crow::request& req) {
+        const std::string param = req.url_params.get("num_options");
 
-    auto tmp = webAPI.port(WEB_API_PORT).multithreaded().run_async();
+        try
+        {
+            const int numOptions = std::stoi(param);
+            nameplate::Message msg(nameplate::PacketType::StartPoll);
+            msg.Push(&numOptions, sizeof(numOptions));
+            s.BroadcastMessage(msg);
 
-    nameplate::Server s(SERVER_PORT, database);
-    s.Start();
+        }
+        catch (const std::invalid_argument& e)
+        {
+            ERROR("[WebAPI] Could not convert to int on route /nameplate/startpoll");
+            return crow::response(400, "Could not conver paramater to int");
+        }
+        catch (const std::out_of_range& e)
+        {
+            ERROR("[WebAPI] Paramater out of range on route /nameplate/startpoll");
+            return crow::response(400, "Paramater out of range");
+        }
+
+        return crow::response(200);
+    });
 
     while (!g_shouldEnd)
     {

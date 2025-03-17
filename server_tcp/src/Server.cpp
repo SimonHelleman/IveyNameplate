@@ -89,6 +89,14 @@ void Server::SendMessage(const uint32_t clientId, const Message& message)
     }
 }
 
+void Server::BroadcastMessage(const Message& message)
+{
+    for (const auto& c : m_connections)
+    {
+        c->SendMessage(message);
+    }
+}
+
 void Server::OnConnect(ClientConnection& client)
 {
     INFO("[Server] " + client.IpAddress() + " connected to server with id " + std::to_string(client.Id()));
