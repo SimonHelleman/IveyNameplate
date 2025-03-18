@@ -16,8 +16,8 @@ PlatformConfig<TCPNetworkConfig> GetPlatformConfig()
     constexpr unsigned int WINDOW_HEIGHT = 720;
 #endif
 
-#ifdef NAMEPLATE_PLATFORM_WINDOWS
-    const char* serialPort = "COM3"; // This is machine and USB port specific make runtime if possible
+#ifdef NAMEPLATE_PLATFORM_DESKTOP
+    const char* serialPort = "COM20"; // This is machine and USB port specific make runtime if possible
     constexpr unsigned int SERIAL_BAUD_RATE = 9600;
 #endif
 

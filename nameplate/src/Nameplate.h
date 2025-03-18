@@ -81,6 +81,8 @@ private:
     Student m_currentStudent;
 
     int m_numPollOptions;
+    int m_selectedPollOption;
+
 
     std::unique_ptr<std::thread> m_cardThread;
 

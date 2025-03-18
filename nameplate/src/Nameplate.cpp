@@ -12,6 +12,9 @@ static constexpr RGB BLACK24 = { };
 static constexpr int BUTTON_WIDTH = 125;
 static constexpr int BUTTON_HEIGHT = 50;
 
+constexpr unsigned int NAME_FONT_SIZE = 400;
+
+
 void RFIDThread(RFID* rfid, uint32_t& id, bool& end)
 {
     end = false;
@@ -28,7 +31,8 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     m_keyboard(2, config.displayHeight - (VirtualKeyboard::LAYOUT_ROWS * (config.displayWidth / 20)) - config.displayWidth / 200 - 12, 
         config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2
     ),
-    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(), m_numPollOptions(0),
+    m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
+    m_numPollOptions(0), m_selectedPollOption(-1),
     m_cardThread()
 {
     m_network->SubscribeToPacket(PacketType::StudentInfo, [this](Message& msg) {        
@@ -61,7 +65,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
     });
 
     m_network->SubscribeToPacket(PacketType::StartPoll, [this](Message& msg) {
-        if (m_currentState == State::Name)
+        if (m_currentState == State::Name || m_currentState == State::Poll)
         {
             msg.Pop(&m_numPollOptions, sizeof(m_numPollOptions), sizeof(m_numPollOptions));
             m_currentState = State::Poll;
@@ -147,13 +151,11 @@ void Nameplate::NameStatePeriodic()
 {
     const unsigned int centerX = m_frontDisplay->Width() / 2;
     const unsigned int centerY = m_frontDisplay->Height() / 2;
-    constexpr unsigned int NAME_FONT_SIZE = 400;
 
     std::string fullName = std::string(m_currentStudent.firstName) + ' ' + std::string(m_currentStudent.lastName);
 
-    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName.c_str());
-
-    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, BLACK32, fullName.c_str());
+    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
+    m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, BLACK32, fullName);
 }
 
 
@@ -245,11 +247,136 @@ void Nameplate::CreateStudentFirstNamePeriodic()
 void Nameplate::PollStateInit()
 {
     LOG_DEBUG("[Nameplate] poll state init");
+    m_selectedPollOption = -1;
 }
 
 void Nameplate::PollStatePeriodic()
 {
-    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, m_rearDisplay->Height() / 2, 20, BLACK24, "Poll + " + std::to_string(m_numPollOptions));
+    constexpr unsigned int LETTER_FONT_SIZE = 106;
+
+    constexpr RGBA RED_FILL = RGBA(0xce, 0x37, 0x46);
+    constexpr RGBA BLUE_FILL = RGBA(0x35, 0x69, 0xc4);
+    constexpr RGBA YELLOW_FILL = RGBA(0xce, 0x9f, 0x40);
+    constexpr RGBA GREEN_FILL = RGBA(0x48, 0x86, 0x2f);
+
+
+    const unsigned int width = m_rearDisplay->Width();
+    const unsigned int height = m_rearDisplay->Height();
+
+    switch (m_selectedPollOption)
+    {
+    case 1:
+        m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, RED_FILL, BLACK32, 0);
+        m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "A");
+
+        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, RED_FILL, BLACK32, 0);
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "A");
+        return;
+    case 2:
+        m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, BLUE_FILL, BLACK32, 0);
+        m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "B");
+
+        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, BLUE_FILL, BLACK32, 0);
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "B");
+        return;
+    case 3:
+        m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, YELLOW_FILL, BLACK32, 0);
+        m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "C");
+
+        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, YELLOW_FILL, BLACK32, 0);
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "C");
+        return;
+    case 4:
+        m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, GREEN_FILL, BLACK32, 0);
+        m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "D");
+
+        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, GREEN_FILL, BLACK32, 0);
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "D");
+        return;
+    }
+
+    m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
+
+    const auto touchPos = m_touch->GetTouchPos();
+    if (m_touch->IsTouched() && RectOverlapTest(0.0f, 0.0f, width / 2, height / 2, touchPos.first, touchPos.second, 1, 1))
+    {
+        m_selectedPollOption = 1;
+    }
+
+    m_rearDisplay->FillRectangle(
+        0.0f, 0.0f, width / 2, height / 2, 
+        RED_FILL, BLACK32, 0
+    );
+
+    m_rearDisplay->DrawText(
+        width / 4, height / 4,
+        LETTER_FONT_SIZE, WHITE32, "A"
+    );
+
+    if (m_numPollOptions >= 2)
+    {
+        m_rearDisplay->FillRectangle(
+            width / 2, 0.0f, width / 2, height / 2,
+            BLUE_FILL, BLACK32, 0
+        );
+
+        m_rearDisplay->DrawText(
+            width - (width / 4), height / 4,
+            LETTER_FONT_SIZE, WHITE32, "B"
+        );
+
+        if (m_touch->IsTouched() && RectOverlapTest(width / 2, 0.0f, width / 2, height / 2, touchPos.first, touchPos.second, 1, 1))
+        {
+            m_selectedPollOption = 2;
+        }
+    }
+
+    if (m_numPollOptions >= 3)
+    {
+        m_rearDisplay->FillRectangle(
+            0.0f, height / 2, width / 2, height / 2,
+            YELLOW_FILL, BLACK32, 0
+        );
+
+        m_rearDisplay->DrawText(
+            width / 4, height - (height / 4),
+            LETTER_FONT_SIZE, WHITE32, "C"
+        );
+
+        if (m_touch->IsTouched() && RectOverlapTest(0.0f, height / 2, width / 2, height / 2, touchPos.first, touchPos.second, 1, 1))
+        {
+            m_selectedPollOption = 3;
+        }
+    }
+
+    if (m_numPollOptions == 4)
+    {
+        m_rearDisplay->FillRectangle(
+            width / 2, height / 2, width / 2, height / 2,
+            GREEN_FILL, BLACK32, 0
+        );
+
+        m_rearDisplay->DrawText(
+            width - (width / 4), height - (height / 4),
+            LETTER_FONT_SIZE, WHITE32, "D"
+        );
+
+        if (m_touch->IsTouched() && RectOverlapTest(width / 2, height / 2, width / 2, height / 2, touchPos.first, touchPos.second, 1, 1))
+        {
+            m_selectedPollOption = 4;
+        }
+    }
+
+    if (m_selectedPollOption > 0)
+    {
+        Message resp(PacketType::PollResponse, m_network->ClientId());
+        resp.Push(&m_selectedPollOption, sizeof(m_selectedPollOption));
+        m_network->SendToServer(resp);
+    }
 }
 
 }

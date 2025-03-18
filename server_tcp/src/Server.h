@@ -49,6 +49,20 @@ private:
 
     void HandleStudentId(Message& msg);
     void HandleStudentInfo(Message& msg);
+    void HandlePollResponse(Message& msg);
+
+private:
+    struct PollResponse
+    {
+        PollResponse() = default;
+        PollResponse(uint32_t clientOwner, int response)
+            : clientOwner(clientOwner), response(response)
+        {
+        }
+
+        uint32_t clientOwner;
+        int response;
+    };
 
 private:
     uint16_t m_port;
@@ -63,6 +77,8 @@ private:
     std::thread m_serverThread;
 
     DatabaseConnection& m_database;
+
+    std::vector<PollResponse> m_pollResponses;
 };
 
 }

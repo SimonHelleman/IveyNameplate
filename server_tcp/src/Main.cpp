@@ -59,6 +59,12 @@ int main()
         try
         {
             const int numOptions = std::stoi(param);
+
+            if (numOptions < 1 || numOptions > 4)
+            {
+                throw std::out_of_range("domain: [1, 4]");
+            }
+
             nameplate::Message msg(nameplate::PacketType::StartPoll);
             msg.Push(&numOptions, sizeof(numOptions));
             s.BroadcastMessage(msg);
@@ -67,12 +73,12 @@ int main()
         catch (const std::invalid_argument& e)
         {
             ERROR("[WebAPI] Could not convert to int on route /nameplate/startpoll");
-            return crow::response(400, "Could not conver paramater to int");
+            return crow::response(400, "Could not conver parameter to int");
         }
         catch (const std::out_of_range& e)
         {
-            ERROR("[WebAPI] Paramater out of range on route /nameplate/startpoll");
-            return crow::response(400, "Paramater out of range");
+            ERROR("[WebAPI] Parameter out of range on route /nameplate/startpoll");
+            return crow::response(400, "parameter out of range");
         }
 
         return crow::response(200);

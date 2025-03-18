@@ -11,7 +11,7 @@ namespace nameplate
 
 Server::Server(uint16_t port, DatabaseConnection& database)
     : m_port(port), m_connectionAcceptor(m_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
-    m_database(database)
+    m_database(database), m_pollResponses()
 {
 }
 
@@ -136,6 +136,9 @@ void Server::HandleMessages()
         case PacketType::StudentInfo:
             HandleStudentInfo(msg);
             break;
+        case PacketType::PollResponse:
+            HandlePollResponse(msg);
+            break;
         default:
             ERROR_FL("[Server] message is an unknown type and can not be handled");
         }
@@ -203,6 +206,27 @@ void Server::HandleStudentInfo(Message& msg)
     m_database.CreateStudent(studentId, lastName, firstName);
 
     SendStudentInfo(msg.ClientId(), studentId);
+}
+
+void Server::HandlePollResponse(Message& msg)
+{
+    int pollResponse;
+    msg.Pop(&pollResponse, sizeof(pollResponse), sizeof(pollResponse));
+
+    // Check for existing response from a particular nameplate
+    const auto it = std::find_if(m_pollResponses.begin(), m_pollResponses.end(), [msg](const PollResponse& resp) {
+        return msg.ClientId() == resp.clientOwner;
+    });
+
+    if (it != m_pollResponses.end())
+    {
+        (*it).response = pollResponse;
+        LOG_DEBUG("[Server] poll response updated to " + std::to_string(pollResponse));
+        return;
+    }
+
+    m_pollResponses.emplace_back(msg.ClientId(), pollResponse);
+    LOG_DEBUG("[Server] poll response " + std::to_string(pollResponse));
 }
 
 }
