@@ -1,8 +1,10 @@
 #include <stdlib.h>
-#define SCROLLS_USE_LOGGER_MACROS
-#include <Scrolls.h>
 #include "../../PlatformFactory.h"
 #include "SerialRFID.h"
+
+#undef ERROR // WinAPI smh
+#define SCROLLS_USE_LOGGER_MACROS
+#include <Scrolls.h>
 
 namespace nameplate
 {
@@ -16,9 +18,9 @@ std::unique_ptr<RFID> PlatformFactory::CreateRFID(const char* serialPort, const 
     }
     catch (const std::exception& e)
     {
+        ERROR("[SerialRFID] Could not connect to RFID Reader");
     }
 
-    ERROR("[SerialRFID] Could not connect to RFID Reader");
     return std::unique_ptr<RFID>();
 }
 

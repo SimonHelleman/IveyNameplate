@@ -158,7 +158,6 @@ void Nameplate::NameStatePeriodic()
     m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, BLACK32, fullName);
 }
 
-
 void Nameplate::CreateStudentLastNameInit()
 {
     LOG_DEBUG("[Nameplate] Create student last name init");
