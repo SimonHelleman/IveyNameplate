@@ -1,3 +1,4 @@
+#include <array>
 #include <string>
 #include <iostream>
 #include <thread>
@@ -82,6 +83,27 @@ int main()
         }
 
         return crow::response(200);
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/polldata")([&]() {
+        crow::json::wvalue resp;
+        auto& data = resp["data"];
+
+        std::array<int, 4> pollResponseCount;
+        pollResponseCount.fill(0);
+
+        for (const auto& r : s.PollResponseData())
+        {
+            ++pollResponseCount[r.response - 1];
+        }
+
+        for (size_t i = 0; i < pollResponseCount.size(); ++i)
+        {
+            data[i]["option"] = i + 1;
+            data[i]["count"] = pollResponseCount[i];
+        }
+
+        return resp;
     });
 
     while (!g_shouldEnd)

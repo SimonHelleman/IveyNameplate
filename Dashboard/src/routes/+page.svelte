@@ -6,25 +6,29 @@
     let handsRaised = 3;
     let uniqueHands = 10;
 
-    let responseData = [
-        { option: "A", count: 8, percentage: "32%" },
-        { option: "B", count: 10, percentage: "40%" },
-        { option: "C", count: 5, percentage: "20%" },
-        { option: "D", count: 2, percentage: "8%" }
-    ];
-
     let chart;
 
     onMount(async () => {
         const Chart = (await import("chart.js/auto")).default;
         const ctx = document.getElementById("responseChart").getContext("2d");
 
+        const resp = await fetch("/nameplate/polldata");
+
+        if (!resp.ok) {
+            throw new Error(`HTTP error! Status: ${resp.status}`);
+        }
+        const data = await resp.json();
+
+        const dataArray = data.data;
+
+        console.log(dataArray);
+
         chart = new Chart(ctx, {
             type: "bar",
             data: {
-                labels: responseData.map(d => d.option),
+                labels: dataArray.map(d => d.option),
                 datasets: [{
-                    data: responseData.map(d => d.count),
+                    data: dataArray.map(d => d.count),
                     backgroundColor: ["red", "green", "orange", "blue"]
                 }]
             },
@@ -150,6 +154,7 @@
         </ul>
     </div>
     <div class="section">
+        <!--
         <h3>Student Responses</h3>
         <table>
             <thead>
@@ -169,6 +174,7 @@
                 {/each}
             </tbody>
         </table>
+        -->
     </div>
     <div class="section">
         <canvas id="responseChart"></canvas>

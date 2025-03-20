@@ -23,6 +23,19 @@ namespace nameplate
 class Server
 {
 public:
+    struct PollResponse
+    {
+        PollResponse() = default;
+        PollResponse(uint32_t clientOwner, int response)
+            : clientOwner(clientOwner), response(response)
+        {
+        }
+
+        uint32_t clientOwner;
+        int response;
+    };
+
+public:
     Server(uint16_t port, DatabaseConnection& database);
 
     Server(const Server&) = delete;
@@ -44,25 +57,17 @@ public:
 
     void HandleMessages();
 
+    const std::vector<PollResponse>& PollResponseData() const
+    {
+        return m_pollResponses;
+    }
+
 private:
     void SendStudentInfo(const uint32_t clientId, const uint32_t studentId);
 
     void HandleStudentId(Message& msg);
     void HandleStudentInfo(Message& msg);
     void HandlePollResponse(Message& msg);
-
-private:
-    struct PollResponse
-    {
-        PollResponse() = default;
-        PollResponse(uint32_t clientOwner, int response)
-            : clientOwner(clientOwner), response(response)
-        {
-        }
-
-        uint32_t clientOwner;
-        int response;
-    };
 
 private:
     uint16_t m_port;
