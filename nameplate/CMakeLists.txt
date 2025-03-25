@@ -76,6 +76,10 @@ if (WIN32)
     target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_WINDOWS)
 endif()
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_definitions(nameplate PRIVATE NAMEPLATE_PLATFORM_LINUX)
+endif()
+
 target_link_libraries(nameplate PRIVATE sfml-graphics)
 target_link_libraries(nameplate PRIVATE scrolls)
 target_include_directories(nameplate PRIVATE ${asio_SOURCE_DIR}/asio/include)

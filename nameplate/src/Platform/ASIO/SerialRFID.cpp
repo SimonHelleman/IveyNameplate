@@ -2,12 +2,34 @@
 #include "../../PlatformFactory.h"
 #include "SerialRFID.h"
 
+#ifdef NAMEPLATE_PLATFORM_LINUX
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
+#endif
+
 #undef ERROR // WinAPI smh
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
 
 namespace nameplate
 {
+
+#ifdef NAMEPLATE_PLATFORM_LINUX
+void ClearNativeSerialBuffer(asio::serial_port& serial)
+{
+    const int fd = serial.native_handle();
+    // Flush both input and output buffers
+    if (tcflush(fd, TCIOFLUSH) == -1)
+    {
+        ERROR("[SerialRFID_Linux] tcflush failed");
+    }
+    else
+    {
+        LOG_DEBUG("[SerialRFID_Linux] buffers cleared successfully");
+    }
+}
+#endif
 
 std::unique_ptr<RFID> PlatformFactory::CreateRFID(const char* serialPort, const unsigned int baudRate)
 {
@@ -37,6 +59,10 @@ uint32_t SerialRFID::GetId()
         m_serial.open(m_serialPortName);
         m_serial.set_option(asio::serial_port_base::baud_rate(m_baudRate));
     }
+
+#ifdef NAMEPLATE_PLATFORM_LINUX
+    ClearNativeSerialBuffer(m_serial);
+#endif
 
     constexpr size_t BUF_SZ = 256;
     constexpr size_t ID_SZ = 8;
