@@ -156,6 +156,29 @@ void Nameplate::NameStatePeriodic()
 
     m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
     m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, BLACK32, fullName);
+
+    const float buttonX = m_rearDisplay->Width() - BUTTON_WIDTH - 10;
+    const float buttonY = m_rearDisplay->Height() - BUTTON_HEIGHT - 10;
+
+    m_rearDisplay->FillRectangle(
+        buttonX, buttonY,
+        BUTTON_WIDTH, BUTTON_HEIGHT, WHITE32, BLACK32, 2
+    );
+    m_rearDisplay->DrawText(buttonX + (BUTTON_WIDTH / 2), buttonY + (BUTTON_HEIGHT / 2), 20, BLACK32, "Sign Out");
+
+    const auto touchPos = m_touch->GetTouchPos();
+    const bool overlap = RectOverlapTest(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, touchPos.first, touchPos.second, 1, 1);
+
+    if (overlap && m_touch->IsTouched())
+    {
+        Message msg(PacketType::LeaveClass, m_network->ClientId());
+        msg.Push(&m_currentStudent.id, sizeof(m_currentStudent.id));
+        m_network->SendToServer(msg);
+
+        m_currentState = State::Idle;
+        m_stateTransition = true;
+    }
+
 }
 
 void Nameplate::CreateStudentLastNameInit()

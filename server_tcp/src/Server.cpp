@@ -139,6 +139,9 @@ void Server::HandleMessages()
         case PacketType::PollResponse:
             HandlePollResponse(msg);
             break;
+        case PacketType::LeaveClass:
+            HandleLeaveClass(msg);
+            break;
         default:
             ERROR_FL("[Server] message is an unknown type and can not be handled");
         }
@@ -162,6 +165,7 @@ void Server::SendStudentInfo(const uint32_t clientId, const uint32_t studentId)
     resp.Push(&lastNameBufSz, sizeof(lastNameBufSz));
     resp.Push(&firstNameBufSz, sizeof(firstNameBufSz));
 
+    m_studentsInClass.push_back(student);
     SendMessage(clientId, resp);
 }
 
@@ -227,6 +231,21 @@ void Server::HandlePollResponse(Message& msg)
 
     m_pollResponses.emplace_back(msg.ClientId(), pollResponse);
     LOG_DEBUG("[Server] poll response " + std::to_string(pollResponse));
+}
+
+void Server::HandleLeaveClass(Message& msg)
+{
+    uint32_t studentId;
+    msg.Pop(&studentId, sizeof(studentId), sizeof(studentId));
+
+    const auto it = std::find_if(m_studentsInClass.begin(), m_studentsInClass.end(), [msg, studentId](const Student& student) {
+        return studentId == student.id;
+    });
+
+    if (it != m_studentsInClass.end()) {
+        m_studentsInClass.erase(it);
+        LOG_DEBUG("[Server] student " + std::to_string(studentId) + " signed out");
+    }
 }
 
 }

@@ -68,6 +68,7 @@ private:
     void HandleStudentId(Message& msg);
     void HandleStudentInfo(Message& msg);
     void HandlePollResponse(Message& msg);
+    void HandleLeaveClass(Message& msg);
 
 private:
     uint16_t m_port;
@@ -84,6 +85,7 @@ private:
     DatabaseConnection& m_database;
 
     std::vector<PollResponse> m_pollResponses;
+    std::vector<Student> m_studentsInClass;
 };
 
 }

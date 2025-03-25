@@ -25,13 +25,19 @@ std::unique_ptr<RFID> PlatformFactory::CreateRFID(const char* serialPort, const 
 }
 
 SerialRFID::SerialRFID(const char* serialPort, const unsigned int baudRate)
-    : m_service(), m_serial(m_service, serialPort)
+    : m_serialPortName(serialPort), m_baudRate(baudRate), m_service(), m_serial(m_service, serialPort)
 {
     m_serial.set_option(asio::serial_port_base::baud_rate(baudRate));
 }
 
 uint32_t SerialRFID::GetId()
 {
+    if (!m_serial.is_open())
+    {
+        m_serial.open(m_serialPortName);
+        m_serial.set_option(asio::serial_port_base::baud_rate(m_baudRate));
+    }
+
     constexpr size_t BUF_SZ = 256;
     constexpr size_t ID_SZ = 8;
     char buffer[BUF_SZ];
@@ -41,8 +47,8 @@ uint32_t SerialRFID::GetId()
 
     LOG_DEBUG("[SerialRFID] " + std::string(buffer));
 
+    m_serial.close();
     return static_cast<uint32_t>(strtoul(buffer, NULL, 16));
 }
-
 
 }
