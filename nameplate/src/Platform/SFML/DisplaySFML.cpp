@@ -1,6 +1,7 @@
 #ifdef NAMEPLATE_PLATFORM_SFML
 #include <stdlib.h>
 #include <filesystem>
+#include <stdexcept>
 
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
@@ -30,6 +31,25 @@ DisplaySFML::DisplaySFML(unsigned int width, unsigned int height, const char* na
     : Display(width, height, name), m_window({ width, height }, name), m_config(config)
 {
     m_window.setFramerateLimit(config.updateRate);
+
+    if (!m_thumbsUpTex.loadFromFile("resources/thumbs_up.jpg"))
+    {
+        throw std::runtime_error("Failed to open thumbs_up.jpg");
+    }
+
+    if (!m_thumbsDownTex.loadFromFile("resources/thumbs_down.jpg"))
+    {
+        throw std::runtime_error("Failed to open thumbs_down.jpg");
+    }
+    
+    m_thumbsUpTex.setSmooth(true);
+    m_thumbsDownTex.setSmooth(true);
+
+    m_thumbsUp.setTexture(m_thumbsUpTex);
+    m_thumbsDown.setTexture(m_thumbsDownTex);
+
+    m_thumbsUp.setScale(100.0f / m_thumbsUpTex.getSize().x, 100.0f / m_thumbsUpTex.getSize().y);
+    m_thumbsDown.setScale(100.0f / m_thumbsDownTex.getSize().x, 100.0f / m_thumbsDownTex.getSize().y);
 }
 
 
@@ -85,6 +105,24 @@ void DisplaySFML::FillRectangle(
     rect.setOutlineThickness(outlineThickness);
 
     m_window.draw(rect);
+}
+
+void DisplaySFML::DrawReaction(
+    const unsigned int posX, const unsigned int posY,
+    const Reaction r
+)
+{
+    switch (r)
+    {
+    case Reaction::ThumbsUp:
+        m_thumbsUp.setPosition(posX, posY);
+        m_window.draw(m_thumbsUp);
+        return;
+    case Reaction::ThumbsDown:
+        m_thumbsDown.setPosition(posX, posY);
+        m_window.draw(m_thumbsDown);
+        return;
+    }
 }
 
 void DisplaySFML::Clear(RGB color)

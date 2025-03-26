@@ -80,6 +80,9 @@ private:
 
     Student m_currentStudent;
 
+    bool m_reactionSelected = false;
+    bool m_reactionSent = false;
+
     int m_numPollOptions;
     int m_selectedPollOption;
 

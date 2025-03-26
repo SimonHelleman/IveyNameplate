@@ -5,6 +5,13 @@
 
 namespace nameplate {
 
+enum class Reaction : uint8_t
+{
+    ThumbsUp,
+    ThumbsDown,
+    RaiseHand
+};
+
 class Display
 {
 public:
@@ -38,6 +45,15 @@ public:
         const float posX, const float posY, const float width, const float height,
         const RGBA fill, const RGBA outlineColor, const float outlineThickness
     ) = 0;
+
+    // Probably should move to a DrawImage approach but this saves time for now
+    virtual void DrawReaction(
+        const unsigned int posX, const unsigned int posY,
+        Reaction r
+    ) = 0;
+
+    virtual const unsigned int ReactionWidth(const Reaction r) const = 0;
+    virtual const unsigned int ReactionHeight(const Reaction r) const = 0;
 
     virtual void Clear(RGB color) = 0;
     virtual void Show() = 0;

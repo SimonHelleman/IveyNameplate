@@ -140,6 +140,38 @@ void Nameplate::IdleStatePeriodic()
 
         LOG_DEBUG("[Nameplate] RFID: " + std::to_string(m_currentId));
     }
+
+    const auto touchPos = m_touch->GetTouchPos();
+
+    const int thumbsUpX = 100;
+    const int thumbsDownX = 250;
+    const int reactionY = m_rearDisplay->Height() - 150;
+    
+    const int thumbsUpWidth = m_rearDisplay->ReactionWidth(Reaction::ThumbsUp);
+    const int thumbsUpHeight = m_rearDisplay->ReactionHeight(Reaction::ThumbsUp);
+    const bool thumbsUpOverlap = RectOverlapTest(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, touchPos.first, touchPos.second, 1, 1);
+
+    if (m_reactionSelected || (thumbsUpOverlap && m_touch->IsTouched()))
+    {
+        if (!m_reactionSent)
+        {
+            LOG_DEBUG("[Nameplate] reeaction sent");
+            Message msg(PacketType::SetReaction, m_network->ClientId());
+            const Reaction r = Reaction::ThumbsUp;
+            msg.Push(&r, sizeof(r));
+            m_network->SendToServer(msg);
+
+            m_reactionSent = true;
+        }
+
+        m_rearDisplay->FillRectangle(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, WHITE32, BLACK32, 2);
+        m_reactionSelected = true;
+    }
+
+    m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
+    m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
+    
+
 }
 
 void Nameplate::NameStateInit()
@@ -178,6 +210,14 @@ void Nameplate::NameStatePeriodic()
         m_currentState = State::Idle;
         m_stateTransition = true;
     }
+
+    const int thumbsUpX = 100;
+    const int thumbsDownX = 250;
+    const int reactionY = m_rearDisplay->Height() - 150;
+
+    m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
+    m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
+
 
 }
 

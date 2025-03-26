@@ -18,6 +18,8 @@ enum class PacketType : uint16_t
     StartPoll,
     EndPoll,
     PollResponse,
+    SetReaction,
+    ClearReaction,
     LeaveClass,
     NameFormat
 };
