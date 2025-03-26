@@ -41,15 +41,23 @@ DisplaySFML::DisplaySFML(unsigned int width, unsigned int height, const char* na
     {
         throw std::runtime_error("Failed to open thumbs_down.jpg");
     }
+
+    if (!m_raiseHandTex.loadFromFile("resources/raise_hand.jpg"))
+    {
+        throw std::runtime_error("Failed to open raise_hand.jpg");
+    }
     
     m_thumbsUpTex.setSmooth(true);
     m_thumbsDownTex.setSmooth(true);
+    m_raiseHandTex.setSmooth(true);
 
     m_thumbsUp.setTexture(m_thumbsUpTex);
     m_thumbsDown.setTexture(m_thumbsDownTex);
+    m_raiseHand.setTexture(m_raiseHandTex);
 
-    m_thumbsUp.setScale(100.0f / m_thumbsUpTex.getSize().x, 100.0f / m_thumbsUpTex.getSize().y);
-    m_thumbsDown.setScale(100.0f / m_thumbsDownTex.getSize().x, 100.0f / m_thumbsDownTex.getSize().y);
+    m_thumbsUp.setScale(150.0f / m_thumbsUpTex.getSize().x, 150.0f / m_thumbsUpTex.getSize().y);
+    m_thumbsDown.setScale(150.0f / m_thumbsDownTex.getSize().x, 150.0f / m_thumbsDownTex.getSize().y);
+    m_raiseHand.setScale(150.0f / m_raiseHandTex.getSize().x, 150.0f / m_raiseHandTex.getSize().y);
 }
 
 
@@ -121,6 +129,10 @@ void DisplaySFML::DrawReaction(
     case Reaction::ThumbsDown:
         m_thumbsDown.setPosition(posX, posY);
         m_window.draw(m_thumbsDown);
+        return;
+    case Reaction::RaiseHand:
+        m_raiseHand.setPosition(posX, posY);
+        m_window.draw(m_raiseHand);
         return;
     }
 }

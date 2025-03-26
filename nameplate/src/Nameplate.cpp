@@ -32,6 +32,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
         config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2
     ),
     m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
+    m_reactionSelected(Reaction::None), m_reactionSent(false), m_raiseHandTime(), m_frontForeground(BLACK24), m_frontBackground(WHITE24),
     m_numPollOptions(0), m_selectedPollOption(-1),
     m_cardThread()
 {
@@ -75,12 +76,6 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
 
 }
 
-void Nameplate::TestHandler(const Message& msg)
-{
-    LOG_DEBUG("[Nameplate] Received clientId msg");
-}
-
-
 void Nameplate::Run()
 {
     while (true)
@@ -90,7 +85,7 @@ void Nameplate::Run()
 
         m_network->HandleMessages();
 
-        m_frontDisplay->Clear(WHITE24);
+        m_frontDisplay->Clear(m_frontBackground);
         m_rearDisplay->Clear(WHITE24);
 
         if (m_stateTransition)
@@ -140,38 +135,6 @@ void Nameplate::IdleStatePeriodic()
 
         LOG_DEBUG("[Nameplate] RFID: " + std::to_string(m_currentId));
     }
-
-    const auto touchPos = m_touch->GetTouchPos();
-
-    const int thumbsUpX = 100;
-    const int thumbsDownX = 250;
-    const int reactionY = m_rearDisplay->Height() - 150;
-    
-    const int thumbsUpWidth = m_rearDisplay->ReactionWidth(Reaction::ThumbsUp);
-    const int thumbsUpHeight = m_rearDisplay->ReactionHeight(Reaction::ThumbsUp);
-    const bool thumbsUpOverlap = RectOverlapTest(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, touchPos.first, touchPos.second, 1, 1);
-
-    if (m_reactionSelected || (thumbsUpOverlap && m_touch->IsTouched()))
-    {
-        if (!m_reactionSent)
-        {
-            LOG_DEBUG("[Nameplate] reeaction sent");
-            Message msg(PacketType::SetReaction, m_network->ClientId());
-            const Reaction r = Reaction::ThumbsUp;
-            msg.Push(&r, sizeof(r));
-            m_network->SendToServer(msg);
-
-            m_reactionSent = true;
-        }
-
-        m_rearDisplay->FillRectangle(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, WHITE32, BLACK32, 2);
-        m_reactionSelected = true;
-    }
-
-    m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
-    m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
-    
-
 }
 
 void Nameplate::NameStateInit()
@@ -184,22 +147,22 @@ void Nameplate::NameStatePeriodic()
     const unsigned int centerX = m_frontDisplay->Width() / 2;
     const unsigned int centerY = m_frontDisplay->Height() / 2;
 
-    std::string fullName = std::string(m_currentStudent.firstName) + ' ' + std::string(m_currentStudent.lastName);
+    const std::string fullName = std::string(m_currentStudent.firstName) + ' ' + std::string(m_currentStudent.lastName);
 
-    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
+    m_frontDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE, m_frontForeground, m_currentStudent.firstName);
     m_rearDisplay->DrawText(centerX, centerY, NAME_FONT_SIZE / 3, BLACK32, fullName);
 
-    const float buttonX = m_rearDisplay->Width() - BUTTON_WIDTH - 10;
-    const float buttonY = m_rearDisplay->Height() - BUTTON_HEIGHT - 10;
+    const float signOutBtnX = m_rearDisplay->Width() - BUTTON_WIDTH - 50;
+    const float buttonY = m_rearDisplay->Height() - BUTTON_HEIGHT - 60;
 
     m_rearDisplay->FillRectangle(
-        buttonX, buttonY,
+        signOutBtnX, buttonY,
         BUTTON_WIDTH, BUTTON_HEIGHT, WHITE32, BLACK32, 2
     );
-    m_rearDisplay->DrawText(buttonX + (BUTTON_WIDTH / 2), buttonY + (BUTTON_HEIGHT / 2), 20, BLACK32, "Sign Out");
+    m_rearDisplay->DrawText(signOutBtnX + (BUTTON_WIDTH / 2), buttonY + (BUTTON_HEIGHT / 2), 20, BLACK32, "Sign Out");
 
     const auto touchPos = m_touch->GetTouchPos();
-    const bool overlap = RectOverlapTest(buttonX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, touchPos.first, touchPos.second, 1, 1);
+    const bool overlap = RectOverlapTest(signOutBtnX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, touchPos.first, touchPos.second, 1, 1);
 
     if (overlap && m_touch->IsTouched())
     {
@@ -211,14 +174,123 @@ void Nameplate::NameStatePeriodic()
         m_stateTransition = true;
     }
 
-    const int thumbsUpX = 100;
-    const int thumbsDownX = 250;
-    const int reactionY = m_rearDisplay->Height() - 150;
+    const int thumbsUpX = 50;
+    const int thumbsDownX = thumbsUpX + 200;
+    const int raiseHandX = thumbsDownX + 200;
+
+    const int reactionY = m_rearDisplay->Height() - 200;
+
+    const int thumbsUpWidth = m_rearDisplay->ReactionWidth(Reaction::ThumbsUp);
+    const int thumbsUpHeight = m_rearDisplay->ReactionHeight(Reaction::ThumbsUp);
+    const bool thumbsUpOverlap = RectOverlapTest(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, touchPos.first, touchPos.second, 1, 1);
+
+    const int thumbsDownWidth = m_rearDisplay->ReactionWidth(Reaction::ThumbsDown);
+    const int thumbsDownHeight = m_rearDisplay->ReactionHeight(Reaction::ThumbsDown);
+    const bool thumbsDownOverlap = RectOverlapTest(thumbsDownX, reactionY, thumbsDownWidth, thumbsDownHeight, touchPos.first, touchPos.second, 1, 1);
+
+    const int raiseHandWidth = m_rearDisplay->ReactionWidth(Reaction::RaiseHand);
+    const int raiseHandHeight = m_rearDisplay->ReactionHeight(Reaction::RaiseHand);
+    const bool raiseHandOverlap = RectOverlapTest(raiseHandX, reactionY, raiseHandWidth, raiseHandHeight, touchPos.first, touchPos.second, 1, 1);
+
+
+    if (m_reactionSelected == Reaction::ThumbsUp || (thumbsUpOverlap && m_touch->IsTouched()))
+    {
+        if (!m_reactionSent)
+        {
+            LOG_DEBUG("[Nameplate] thumbs uo reaction sent");
+            Message msg(PacketType::SetReaction, m_network->ClientId());
+            const Reaction r = Reaction::ThumbsUp;
+            msg.Push(&r, sizeof(r));
+            m_network->SendToServer(msg);
+
+            m_reactionSent = true;
+        }
+
+        m_rearDisplay->FillRectangle(thumbsUpX, reactionY, thumbsUpWidth, thumbsUpHeight, WHITE32, BLACK32, 2);
+        m_reactionSelected = Reaction::ThumbsUp;
+        m_frontDisplay->DrawReaction(m_rearDisplay->Width() - 150, 25, Reaction::ThumbsUp);
+    }
+
+    if (m_reactionSelected == Reaction::ThumbsDown || (thumbsDownOverlap && m_touch->IsTouched()))
+    {
+        if (!m_reactionSent)
+        {
+            LOG_DEBUG("[Nameplate] thumbs down reeaction sent");
+            Message msg(PacketType::SetReaction, m_network->ClientId());
+            const Reaction r = Reaction::ThumbsDown;
+            msg.Push(&r, sizeof(r));
+            m_network->SendToServer(msg);
+
+            m_reactionSent = true;
+        }
+
+        m_rearDisplay->FillRectangle(thumbsDownX, reactionY, thumbsDownWidth, thumbsDownHeight, WHITE32, BLACK32, 2);
+        m_reactionSelected = Reaction::ThumbsDown;
+        
+        m_frontDisplay->DrawReaction(m_rearDisplay->Width() - 150, 25, Reaction::ThumbsDown);
+    }
+
+    if (m_reactionSelected == Reaction::RaiseHand || (raiseHandOverlap && m_touch->IsTouched()))
+    {
+        if (!m_reactionSent)
+        {
+            LOG_DEBUG("[Nameplate] raise hand reeaction sent");
+            Message msg(PacketType::SetReaction, m_network->ClientId());
+            const Reaction r = Reaction::RaiseHand;
+            msg.Push(&r, sizeof(r));
+            m_network->SendToServer(msg);
+
+            m_raiseHandTime.Mark();
+            m_reactionSent = true;
+        }
+
+        m_rearDisplay->FillRectangle(raiseHandX, reactionY, raiseHandWidth, raiseHandHeight, WHITE32, BLACK32, 2);
+        m_reactionSelected = Reaction::RaiseHand;
+
+        if (m_raiseHandTime.Elapsed() > 1.0f)
+        {
+            m_raiseHandTime.Mark();
+            if (m_frontForeground == WHITE24)
+            {
+                m_frontForeground = BLACK24;
+                m_frontBackground = WHITE24;
+            }
+            else if (m_frontForeground == BLACK24)
+            {
+                m_frontForeground = WHITE24;
+                m_frontBackground = BLACK24;
+            }
+        }
+
+    }
 
     m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
     m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
+    m_rearDisplay->DrawReaction(raiseHandX, reactionY, Reaction::RaiseHand);
 
+    const int clearReactionsBtnX = signOutBtnX - 1000;
 
+    if (m_reactionSelected != Reaction::None)
+    {
+        m_rearDisplay->FillRectangle(
+            clearReactionsBtnX, buttonY,
+            BUTTON_WIDTH, BUTTON_HEIGHT, WHITE32, BLACK32, 2
+        );
+        const bool clearRxnOverlap = RectOverlapTest(clearReactionsBtnX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT, touchPos.first, touchPos.second, 1, 1);
+
+        if (clearRxnOverlap && m_touch->IsTouched())
+        {
+            m_reactionSelected = Reaction::None;
+            Message msg(PacketType::ClearReaction, m_network->ClientId());
+            m_network->SendToServer(msg);
+            m_reactionSent = false;
+            LOG_DEBUG("[Nameplate] reeaction cleared");
+            m_frontForeground = BLACK24;
+            m_frontBackground = WHITE24;
+        }
+
+        m_rearDisplay->DrawText(clearReactionsBtnX + (BUTTON_WIDTH / 2), buttonY + (BUTTON_HEIGHT / 2), 20, BLACK32, "Clear");
+    }
 }
 
 void Nameplate::CreateStudentLastNameInit()

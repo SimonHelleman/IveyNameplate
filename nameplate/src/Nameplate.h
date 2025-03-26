@@ -7,6 +7,7 @@
 #define SCROLLS_USE_LOGGER_MACROS
 #include <Scrolls.h>
 
+#include "Util/Timer.h"
 #include "PlatformFactory.h"
 #include "Touch.h"
 #include "Student.h"
@@ -33,8 +34,6 @@ public:
     Nameplate(const PlatformConfig<TCPNetworkConfig>& config);
 
     void Run();
-
-    void TestHandler(const Message& msg);
 
 private:
     struct StateHandler
@@ -80,8 +79,13 @@ private:
 
     Student m_currentStudent;
 
-    bool m_reactionSelected = false;
-    bool m_reactionSent = false;
+    Reaction m_reactionSelected;
+    bool m_reactionSent;
+
+    Timer m_raiseHandTime;
+
+    RGB m_frontForeground;
+    RGB m_frontBackground;
 
     int m_numPollOptions;
     int m_selectedPollOption;

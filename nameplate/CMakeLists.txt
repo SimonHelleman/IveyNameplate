@@ -36,6 +36,7 @@ set(SOURCE_FILES
     src/Nameplate.cpp
     src/VirtualKeyboard.cpp
     src/Util/MiscUtil.cpp
+    src/Util/Timer.cpp
     src/Platform/PlatformConfig.cpp
     src/Platform/Desktop/EntryDesktop.cpp
     src/Platform/SFML/DisplaySFML.cpp
@@ -47,6 +48,8 @@ set(SOURCE_FILES
 set(HEADER_FILES
     ../common/message/Message.h
     ../common/message/Message.cpp
+    ../common/Student.h
+    ../common/Reaction.h
     src/PlatformFactory.h
     src/Display.h
     src/Touch.h
@@ -56,6 +59,7 @@ set(HEADER_FILES
     src/RFID.h
     src/Util/Color.h
     src/Util/MiscUtil.h
+    src/Util/Timer.h
     src/Platform/SFML/DisplaySFML.h
     src/Platform/ASIO/Client.h
     src/Platform/ASIO/ServerConnection.h

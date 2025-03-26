@@ -3,14 +3,9 @@
 #include <string>
 #include "Util/Color.h"
 
-namespace nameplate {
+#include "Reaction.h"
 
-enum class Reaction : uint8_t
-{
-    ThumbsUp,
-    ThumbsDown,
-    RaiseHand
-};
+namespace nameplate {
 
 class Display
 {

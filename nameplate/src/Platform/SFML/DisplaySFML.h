@@ -55,7 +55,11 @@ public:
             return m_thumbsUp.getGlobalBounds().width;
         case Reaction::ThumbsDown:
             return m_thumbsDown.getGlobalBounds().width;
+        case Reaction::RaiseHand:
+            return m_raiseHand.getGlobalBounds().width;
         }
+
+        return -1;
     }
 
     // Better solution for htis needed
@@ -67,7 +71,11 @@ public:
             return m_thumbsUp.getGlobalBounds().height;
         case Reaction::ThumbsDown:
             return m_thumbsDown.getGlobalBounds().height;
+        case Reaction::RaiseHand:
+            return m_raiseHand.getGlobalBounds().height;
         }
+
+        return -1;
     }
 
 
@@ -75,8 +83,10 @@ private:
     sf::RenderWindow m_window;
     sf::Texture m_thumbsUpTex;
     sf::Texture m_thumbsDownTex;
+    sf::Texture m_raiseHandTex;
     sf::Sprite m_thumbsUp;
     sf::Sprite m_thumbsDown;
+    sf::Sprite m_raiseHand;
     const Config m_config;
 };
 
