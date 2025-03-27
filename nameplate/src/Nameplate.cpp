@@ -172,7 +172,7 @@ void Nameplate::IdleStatePeriodic()
 
 void Nameplate::NameStateInit()
 {
-    LOG_DEBUG("[Namplate] Name state init");
+    INFO("[Namplate] Name state init");
 }
 
 void Nameplate::NameStatePeriodic()
@@ -236,7 +236,7 @@ void Nameplate::NameStatePeriodic()
     {
         if (!m_reactionSent)
         {
-            LOG_DEBUG("[Nameplate] thumbs uo reaction sent");
+            LOG_DEBUG("[Nameplate] thumbs up reaction sent");
             Message msg(PacketType::SetReaction, m_network->ClientId());
             const Reaction r = Reaction::ThumbsUp;
             msg.Push(&r, sizeof(r));
@@ -331,7 +331,7 @@ void Nameplate::NameStatePeriodic()
 
 void Nameplate::CreateStudentLastNameInit()
 {
-    LOG_DEBUG("[Nameplate] Create student last name init");
+    INFO("[Nameplate] Create student last name init");
     m_keyboard.ClearText();
 }
 
@@ -368,7 +368,7 @@ void Nameplate::CreateStudentLastNamePeriodic()
 
 void Nameplate::CreateStudentFirstNameInit()
 {
-    LOG_DEBUG("[Nameplate] Create student first name init");
+    INFO("[Nameplate] Create student first name init");
     m_keyboard.ClearText();
 }
 
@@ -416,7 +416,7 @@ void Nameplate::CreateStudentFirstNamePeriodic()
 
 void Nameplate::PollStateInit()
 {
-    LOG_DEBUG("[Nameplate] poll state init");
+    INFO("[Nameplate] poll state init");
     m_selectedPollOption = -1;
 }
 

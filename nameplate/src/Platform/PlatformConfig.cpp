@@ -13,7 +13,7 @@ PlatformConfig<TCPNetworkConfig> GetPlatformConfig()
 {
 #ifdef NAMEPLATE_PLATFORM_SFML
     constexpr unsigned int WINDOW_WIDTH = 1920;
-    constexpr unsigned int WINDOW_HEIGHT = 720;
+    constexpr unsigned int WINDOW_HEIGHT = 620;
 #endif
 
 #ifdef NAMEPLATE_PLATFORM_DESKTOP
