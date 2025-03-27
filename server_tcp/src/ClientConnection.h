@@ -53,12 +53,17 @@ private:
     void AsyncReceiveHeader();
     void AsyncReceivePayload();
 
+// Enternally managed fields. I don't like this design
+// but I need this to work ASAP
+public:
+    bool hasStudentSession = false;
+    uint32_t currentStudentId = 0xffffffff;
+
 private:
     asio::ip::tcp::socket m_socket;
     asio::io_context& m_context;
     asio::ip::address m_ipAddr;
     unsigned int m_id;
-
 
     Message m_incomingMsg;
      

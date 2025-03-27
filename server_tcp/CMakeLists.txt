@@ -43,6 +43,8 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     ../common/Student.h
+    ../common/Reaction.h
+    ../common/QuietMode.h
     ../common/message/Message.h
     src/ClientConnection.h
     src/DatabaseConnection.h

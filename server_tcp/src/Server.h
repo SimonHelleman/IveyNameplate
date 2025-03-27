@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <unordered_map>
 #include <thread>
 
 #define ASIO_STANDALONE
@@ -15,6 +16,8 @@
 #undef SendMessage
 #endif
 
+#include "Reaction.h"
+#include "QuietMode.h"
 #include "DatabaseConnection.h"
 #include "ClientConnection.h"
 
@@ -62,6 +65,16 @@ public:
         return m_pollResponses;
     }
 
+    const std::vector<Student>& StundentsInClass()
+    {
+        return m_studentsInClass;
+    }
+
+    const int ReactionCount(const Reaction r)
+    {
+        return m_reactions[r];
+    }
+
 private:
     void SendStudentInfo(const uint32_t clientId, const uint32_t studentId);
 
@@ -69,6 +82,8 @@ private:
     void HandleStudentInfo(Message& msg);
     void HandlePollResponse(Message& msg);
     void HandleLeaveClass(Message& msg);
+    void HandleSetReaction(Message& msg);
+    void HandleClearReaction(Message& msg);
 
 private:
     uint16_t m_port;
@@ -86,6 +101,8 @@ private:
 
     std::vector<PollResponse> m_pollResponses;
     std::vector<Student> m_studentsInClass;
+
+    std::unordered_map<Reaction, int> m_reactions;
 };
 
 }

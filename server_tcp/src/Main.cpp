@@ -85,6 +85,12 @@ int main()
         return crow::response(200);
     });
 
+    CROW_ROUTE(webAPI, "/nameplate/endpoll")([&](const crow::request& req) {
+        nameplate::Message msg(nameplate::PacketType::EndPoll);
+        s.BroadcastMessage(msg);
+        return crow::response(200);
+    });
+
     CROW_ROUTE(webAPI, "/nameplate/polldata")([&]() {
         crow::json::wvalue resp;
         auto& data = resp["data"];
@@ -104,6 +110,92 @@ int main()
         }
 
         return resp;
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/studentsinclass")([&]() {
+        crow::json::wvalue resp;
+        auto& data = resp["data"];
+
+        const auto& students = s.StundentsInClass();
+        for (size_t i = 0; i < students.size(); ++i)
+        {
+            crow::json::wvalue student;
+            data[i]["nameLast"] = students[i].lastName;
+            data[i]["nameFirst"] = students[i].firstName;
+        }
+
+        return resp;
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/reactions")([&]() {
+        crow::json::wvalue resp;
+        resp["thumbsUp"] = s.ReactionCount(Reaction::ThumbsUp);
+        resp["thumbsDown"] = s.ReactionCount(Reaction::ThumbsDown);
+        resp["handsUp"] = s.ReactionCount(Reaction::RaiseHand);
+
+        return resp;
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/clearreact")([&]() {
+        nameplate::Message msg(nameplate::PacketType::ClearReaction);
+        s.BroadcastMessage(msg);
+        return crow::response(200);
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/quietmode")([&](const crow::request& req) {
+        const std::string param = req.url_params.get("mode");
+
+        nameplate::Message resp(nameplate::PacketType::QuiteMode);
+        if (param == "on")
+        {
+            nameplate::QuietMode mode = nameplate::QuietMode::On;
+            resp.Push(&mode, sizeof(mode));
+            s.BroadcastMessage(resp);
+            return crow::response(200);
+        }
+
+        if (param == "off")
+        {
+            nameplate::QuietMode mode = nameplate::QuietMode::Off;
+            resp.Push(&mode, sizeof(mode));
+            s.BroadcastMessage(resp);
+            return crow::response(200);
+        }
+
+        if (param == "partial")
+        {
+            nameplate::QuietMode mode = nameplate::QuietMode::Partial;
+            resp.Push(&mode, sizeof(mode));
+            s.BroadcastMessage(resp);
+            return crow::response(200);
+        }
+
+        return crow::response(400, "invalid paramater");
+        
+    });
+
+    CROW_ROUTE(webAPI, "/nameplate/anonymous")([&](const crow::request& req) {
+        const std::string param = req.url_params.get("mode");
+
+        nameplate::Message resp(nameplate::PacketType::AnonymousMode);
+
+        if (param == "on")
+        {
+            nameplate::AnonymousMode mode = nameplate::AnonymousMode::On;
+            resp.Push(&mode, sizeof(mode));
+            s.BroadcastMessage(resp);
+            return crow::response(200);
+        }
+
+        if (param == "off")
+        {
+            nameplate::AnonymousMode mode = nameplate::AnonymousMode::Off;
+            resp.Push(&mode, sizeof(mode));
+            s.BroadcastMessage(resp);
+            return crow::response(200);
+        }
+
+        return crow::response(400, "invalid paramater");
     });
 
     while (!g_shouldEnd)

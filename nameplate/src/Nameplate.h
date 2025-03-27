@@ -12,6 +12,7 @@
 #include "Touch.h"
 #include "Student.h"
 #include "VirtualKeyboard.h"
+#include "QuietMode.h"
 
 namespace nameplate {
 
@@ -59,6 +60,9 @@ private:
 
     void PollStateInit();
     void PollStatePeriodic();
+
+private:
+    void ClearReaction();
     
 private:
     const std::unique_ptr<Display> m_frontDisplay;
@@ -78,6 +82,9 @@ private:
     uint32_t m_currentId;
 
     Student m_currentStudent;
+
+    QuietMode m_currentQuietMode;
+    AnonymousMode m_anonymousMode;
 
     Reaction m_reactionSelected;
     bool m_reactionSent;

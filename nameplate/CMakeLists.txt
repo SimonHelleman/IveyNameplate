@@ -50,6 +50,7 @@ set(HEADER_FILES
     ../common/message/Message.cpp
     ../common/Student.h
     ../common/Reaction.h
+    ../common/QuietMode.h
     src/PlatformFactory.h
     src/Display.h
     src/Touch.h

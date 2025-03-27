@@ -103,11 +103,31 @@ void Server::OnConnect(ClientConnection& client)
     // Send their Id
     Message message(PacketType::SetClientId, client.Id());
     SendMessage(client, message);
+
+    // Send default quiet mode value
+    Message quietMsg(PacketType::QuiteMode, client.Id());
+    QuietMode mode = QuietMode::Off;
+    quietMsg.Push(&mode, sizeof(mode));
+    SendMessage(client, quietMsg);
 }
 
+// TODO still an edge case where if a client disconnects before clearing their reactions
 void Server::OnDisconnect(const ClientConnection& client)
 {
     INFO("[Server] " + client.IpAddress() + " (connection_" + std::to_string(client.Id()) + ") disconnected from server");
+
+    if (client.hasStudentSession)
+    {
+        const auto it = std::find_if(m_studentsInClass.begin(), m_studentsInClass.end(), [&](const Student& student) {
+            return client.currentStudentId == student.id;
+        });
+
+        if (it != m_studentsInClass.end()) {
+            m_studentsInClass.erase(it);
+            LOG_DEBUG("[Server] student " + std::to_string(client.currentStudentId) + " removed because of disconnection");
+        }
+    }
+
     const auto it = std::find_if(m_connections.begin(), m_connections.end(), [&client](const std::shared_ptr<ClientConnection>& ptr) {
         return ptr.get() == &client;
     });
@@ -142,6 +162,12 @@ void Server::HandleMessages()
         case PacketType::LeaveClass:
             HandleLeaveClass(msg);
             break;
+        case PacketType::SetReaction:
+            HandleSetReaction(msg);
+            break;
+        case PacketType::ClearReaction:
+            HandleClearReaction(msg);
+            break;
         default:
             ERROR_FL("[Server] message is an unknown type and can not be handled");
         }
@@ -166,6 +192,16 @@ void Server::SendStudentInfo(const uint32_t clientId, const uint32_t studentId)
     resp.Push(&firstNameBufSz, sizeof(firstNameBufSz));
 
     m_studentsInClass.push_back(student);
+
+    for (const auto& c : m_connections)
+    {
+        if (c->Id() == clientId)
+        {
+            c->currentStudentId = studentId;
+            c->hasStudentSession = true;
+        }
+    }
+
     SendMessage(clientId, resp);
 }
 
@@ -246,6 +282,20 @@ void Server::HandleLeaveClass(Message& msg)
         m_studentsInClass.erase(it);
         LOG_DEBUG("[Server] student " + std::to_string(studentId) + " signed out");
     }
+}
+
+void Server::HandleSetReaction(Message& msg)
+{
+    Reaction r;
+    msg.Pop(&r, sizeof(r), sizeof(r));
+    ++m_reactions[r];
+}
+
+void Server::HandleClearReaction(Message& msg)
+{
+    Reaction r;
+    msg.Pop(&r, sizeof(r), sizeof(r));
+    --m_reactions[r];
 }
 
 }

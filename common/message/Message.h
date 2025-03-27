@@ -21,7 +21,9 @@ enum class PacketType : uint16_t
     SetReaction,
     ClearReaction,
     LeaveClass,
-    NameFormat
+    NameFormat,
+    QuiteMode,
+    AnonymousMode
 };
 
 struct Header

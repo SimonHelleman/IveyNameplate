@@ -1,25 +1,92 @@
 <script>
     import { onMount } from "svelte";
     import logo from "$lib/images/western-brand.svg";
+	import { sequence } from "@sveltejs/kit/hooks";
 
-    let studentsLogged = 25;
-    let handsRaised = 3;
-    let uniqueHands = 10;
+    let studentsLogged = 0;
+    let handsRaised = 0;
+    let thumbsUp = 0;
+    let thumbsDown = 0;
 
     let chart;
+
+    let studentsInClass = [];
+
+    let quietMode = "off"; // Default
+    let anonymousMode = "off"; //Default
+
+    async function setQuietMode(mode) {
+        try {
+            const resp = await fetch(`/nameplate/quietmode?mode=${mode}`, { method: "GET" });
+            if (!resp.ok) throw new Error(`Error setting quiet mode! Status: ${resp.status}`);
+            console.log(`Quiet mode set to: ${mode}`);
+        } catch (error) {
+            console.error("Error updating quiet mode:", error);
+        }
+    }
+    
+    async function setAnonymousMode(mode) {
+        try {
+            const resp = await fetch(`/nameplate/anonymous?mode=${mode}`, { method: "GET" });
+            if (!resp.ok) throw new Error(`Error setting anonymous mode mode! Status: ${resp.status}`);
+            console.log(`Anonymous mode set to: ${mode}`);
+        } catch (error) {
+            console.error("Error updating anonymous mode:", error);
+        }
+    }
+
+    function handleQuietModeChange(event) {
+        quietMode = event.target.value; // Update variable
+        setQuietMode(quietMode); // Send update to API
+    }
+
+    function handleAnonymousModeChange(event) {
+        anonymousMode = event.target.value;
+        setAnonymousMode(anonymousMode);
+    }
+
+    async function onClear(event) {
+        console.log("onClear()");
+        const resp = await fetch(`/nameplate/clearreact`, { method: "GET" });
+        if (!resp.ok) throw new Error(`Error clearing reactions! Status: ${resp.status}`);
+    }
 
     onMount(async () => {
         const Chart = (await import("chart.js/auto")).default;
         const ctx = document.getElementById("responseChart").getContext("2d");
 
-        const resp = await fetch("/nameplate/polldata");
-
-        if (!resp.ok) {
-            throw new Error(`HTTP error! Status: ${resp.status}`);
+        const pollDataResp = await fetch("/nameplate/polldata");
+        const studentDataResp = await fetch("/nameplate/studentsinclass");
+        const reactionResp = await fetch("/nameplate/reactions");
+        
+        
+        if (!pollDataResp.ok) {
+            throw new Error(`HTTP error! Status: ${pollDataResp.status}`);
         }
-        const data = await resp.json();
+        
+        if (!studentDataResp.ok) {
+            throw new Error(`HTTP error! Status: ${studentDataResp.status}`);
+        }
+        if (!reactionResp.ok) {
+            throw new Error(`HTTP error! Status: ${reactionResp.status}`);
+        } 
+        
+        const pollData = await pollDataResp.json();
+        const studentData = await studentDataResp.json();
+        const reactionData = await reactionResp.json();
 
-        const dataArray = data.data;
+        studentsInClass = studentData.data.map(({ nameLast, nameFirst }) => `${nameLast} ${nameFirst}`);
+
+        handsRaised = reactionData.handsUp;
+        thumbsUp = reactionData.thumbsUp;
+        thumbsDown = reactionData.thumbsDown;
+
+        studentsLogged = studentsInClass.length;
+
+        await setQuietMode("off");
+        await setAnonymousMode("off");
+
+        const dataArray = pollData.data;
 
         console.log(dataArray);
 
@@ -114,16 +181,16 @@
 
 <div class="top-bar">
     <label>Quiet Mode:
-        <select>
+        <select value={quietMode} on:change={handleQuietModeChange}>
             <option value="on">On</option>
             <option value="off">Off</option>
             <option value="partial">Partial</option>
         </select>
     </label>
     <label>Anonymous Mode:
-        <select>
-            <option value="on">On</option>
+        <select value={anonymousMode} on:change={handleAnonymousModeChange}>
             <option value="off">Off</option>
+            <option value="on">On</option>
         </select>
     </label>
     <label>Font Size:
@@ -140,17 +207,15 @@
         <h3>Classroom Stats</h3>
         <p>Students Logged In: {studentsLogged}</p>
         <p>Current Hands Raised: {handsRaised}</p>
-        <p>Unique Hands Raised: {uniqueHands}</p>
+        <p>Thumbs Up: {thumbsUp}</p>
+        <p>Thumbs Down: {thumbsDown}</p>
     </div>
     <div class="section">
         <h3>Student List</h3>
         <ul>
-            <li>Student 1</li>
-            <li>Student 2</li>
-            <li>Student 3</li>
-            <li>Student 4</li>
-            <li>Student 5</li>
-            <li>Student 6</li>
+            {#each studentsInClass as student}
+                <li>{student}</li>
+            {/each}
         </ul>
     </div>
     <div class="section">
@@ -182,6 +247,6 @@
 </div>
 
 <div class="footer">
-    <button on:click={() => console.log("Clear button clicked")}>Clear</button>
+    <button on:click={onClear}>Clear</button>
     <button on:click={() => console.log("Help button clicked")}>Help</button>
 </div>

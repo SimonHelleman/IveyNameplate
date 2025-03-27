@@ -32,6 +32,7 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
         config.displayWidth / 20, config.displayWidth / 20, config.displayWidth / 200, 2
     ),
     m_currentState(State::Idle), m_stateTransition(true), m_readId(false), m_currentId(0), m_currentStudent(),
+    m_currentQuietMode(QuietMode::Off), m_anonymousMode(AnonymousMode::Off),
     m_reactionSelected(Reaction::None), m_reactionSent(false), m_raiseHandTime(), m_frontForeground(BLACK24), m_frontBackground(WHITE24),
     m_numPollOptions(0), m_selectedPollOption(-1),
     m_cardThread()
@@ -72,6 +73,38 @@ Nameplate::Nameplate(const PlatformConfig<TCPNetworkConfig>& config)
             m_currentState = State::Poll;
             m_stateTransition = true;
         }
+    });
+
+    m_network->SubscribeToPacket(PacketType::EndPoll, [this](Message& msg) {
+        if (m_currentState == State::Poll)
+        {
+            m_currentState = State::Name;
+            m_stateTransition = true;
+        }
+    });
+
+    m_network->SubscribeToPacket(PacketType::QuiteMode, [this](Message& msg) {
+        QuietMode mode;
+        msg.Pop(&mode, sizeof(mode), sizeof(mode));
+        m_currentQuietMode = mode;
+        INFO("[Nameplate] Quiet mode set to: " + std::to_string(static_cast<int>(mode)));
+
+        if (m_currentQuietMode != QuietMode::Off && m_reactionSelected != Reaction::None)
+        {
+            ClearReaction();
+        }
+    });
+
+    m_network->SubscribeToPacket(PacketType::AnonymousMode, [this](Message& msg) {
+        AnonymousMode mode;
+        msg.Pop(&mode, sizeof(mode), sizeof(mode));
+        m_anonymousMode = mode;
+        INFO("[Nameplate] Anonymous mode set to: " + std::to_string(static_cast<int>(mode)));
+    });
+
+    m_network->SubscribeToPacket(PacketType::ClearReaction, [this](Message& msg) {
+        INFO("[Nameplate] Network request to clear reactions");
+        ClearReaction();
     });
 
 }
@@ -166,6 +199,12 @@ void Nameplate::NameStatePeriodic()
 
     if (overlap && m_touch->IsTouched())
     {
+        // Clear existing reaction
+        if (m_reactionSelected != Reaction::None)
+        {
+            ClearReaction();
+        }
+        
         Message msg(PacketType::LeaveClass, m_network->ClientId());
         msg.Push(&m_currentStudent.id, sizeof(m_currentStudent.id));
         m_network->SendToServer(msg);
@@ -193,7 +232,7 @@ void Nameplate::NameStatePeriodic()
     const bool raiseHandOverlap = RectOverlapTest(raiseHandX, reactionY, raiseHandWidth, raiseHandHeight, touchPos.first, touchPos.second, 1, 1);
 
 
-    if (m_reactionSelected == Reaction::ThumbsUp || (thumbsUpOverlap && m_touch->IsTouched()))
+    if (m_reactionSelected == Reaction::ThumbsUp || (thumbsUpOverlap && m_touch->IsTouched()) && m_currentQuietMode == QuietMode::Off)
     {
         if (!m_reactionSent)
         {
@@ -211,7 +250,7 @@ void Nameplate::NameStatePeriodic()
         m_frontDisplay->DrawReaction(m_rearDisplay->Width() - 150, 25, Reaction::ThumbsUp);
     }
 
-    if (m_reactionSelected == Reaction::ThumbsDown || (thumbsDownOverlap && m_touch->IsTouched()))
+    if (m_reactionSelected == Reaction::ThumbsDown || (thumbsDownOverlap && m_touch->IsTouched()) && m_currentQuietMode == QuietMode::Off)
     {
         if (!m_reactionSent)
         {
@@ -230,7 +269,7 @@ void Nameplate::NameStatePeriodic()
         m_frontDisplay->DrawReaction(m_rearDisplay->Width() - 150, 25, Reaction::ThumbsDown);
     }
 
-    if (m_reactionSelected == Reaction::RaiseHand || (raiseHandOverlap && m_touch->IsTouched()))
+    if (m_reactionSelected == Reaction::RaiseHand || (raiseHandOverlap && m_touch->IsTouched()) && m_currentQuietMode == QuietMode::Off)
     {
         if (!m_reactionSent)
         {
@@ -264,9 +303,12 @@ void Nameplate::NameStatePeriodic()
 
     }
 
-    m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
-    m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
-    m_rearDisplay->DrawReaction(raiseHandX, reactionY, Reaction::RaiseHand);
+    if (m_currentQuietMode == QuietMode::Off)
+    {
+        m_rearDisplay->DrawReaction(thumbsUpX, reactionY, Reaction::ThumbsUp);
+        m_rearDisplay->DrawReaction(thumbsDownX, reactionY, Reaction::ThumbsDown);
+        m_rearDisplay->DrawReaction(raiseHandX, reactionY, Reaction::RaiseHand);
+    }
 
     const int clearReactionsBtnX = signOutBtnX - 1000;
 
@@ -280,13 +322,7 @@ void Nameplate::NameStatePeriodic()
 
         if (clearRxnOverlap && m_touch->IsTouched())
         {
-            m_reactionSelected = Reaction::None;
-            Message msg(PacketType::ClearReaction, m_network->ClientId());
-            m_network->SendToServer(msg);
-            m_reactionSent = false;
-            LOG_DEBUG("[Nameplate] reeaction cleared");
-            m_frontForeground = BLACK24;
-            m_frontBackground = WHITE24;
+            ClearReaction();
         }
 
         m_rearDisplay->DrawText(clearReactionsBtnX + (BUTTON_WIDTH / 2), buttonY + (BUTTON_HEIGHT / 2), 20, BLACK32, "Clear");
@@ -403,33 +439,57 @@ void Nameplate::PollStatePeriodic()
         m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, RED_FILL, BLACK32, 0);
         m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "A");
 
-        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, RED_FILL, BLACK32, 0);
-        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
-        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "A");
+        if (m_anonymousMode == AnonymousMode::Off)
+        {
+            m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, RED_FILL, BLACK32, 0);
+            m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+            m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "A");
+            return;
+        }
+        
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
         return;
     case 2:
         m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, BLUE_FILL, BLACK32, 0);
         m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "B");
 
-        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, BLUE_FILL, BLACK32, 0);
-        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
-        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "B");
+        if (m_anonymousMode == AnonymousMode::Off)
+        {
+            m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, BLUE_FILL, BLACK32, 0);
+            m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+            m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "B");
+            return;
+        }
+
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
         return;
     case 3:
         m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, YELLOW_FILL, BLACK32, 0);
         m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "C");
 
-        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, YELLOW_FILL, BLACK32, 0);
-        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
-        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "C");
+        if (m_anonymousMode == AnonymousMode::Off)
+        {
+            m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, YELLOW_FILL, BLACK32, 0);
+            m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+            m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "C");
+            return;
+        }
+
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
         return;
     case 4:
         m_rearDisplay->FillRectangle(0.0f, 0.0f, width, height, GREEN_FILL, BLACK32, 0);
         m_rearDisplay->DrawText(width / 2, height / 2, LETTER_FONT_SIZE, WHITE32, "D");
 
-        m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, GREEN_FILL, BLACK32, 0);
-        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
-        m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "D");
+        if (m_anonymousMode == AnonymousMode::Off)
+        {
+            m_frontDisplay->FillRectangle(0.0f, 0.0f, width, height, GREEN_FILL, BLACK32, 0);
+            m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, WHITE32, m_currentStudent.firstName);
+            m_frontDisplay->DrawText(width - 50, height - 50, LETTER_FONT_SIZE, WHITE32, "D");
+            return;
+        }
+
+        m_frontDisplay->DrawText(width / 2, height / 2, NAME_FONT_SIZE, BLACK32, m_currentStudent.firstName);
         return;
     }
 
@@ -511,6 +571,21 @@ void Nameplate::PollStatePeriodic()
         resp.Push(&m_selectedPollOption, sizeof(m_selectedPollOption));
         m_network->SendToServer(resp);
     }
+}
+
+void Nameplate::ClearReaction()
+{
+    const Reaction r = m_reactionSelected;
+    m_reactionSelected = Reaction::None;
+
+    Message msg(PacketType::ClearReaction, m_network->ClientId());
+    msg.Push(&r, sizeof(r));
+    m_network->SendToServer(msg);
+
+    m_reactionSent = false;
+    LOG_DEBUG("[Nameplate] reeaction cleared");
+    m_frontForeground = BLACK24;
+    m_frontBackground = WHITE24;
 }
 
 }
