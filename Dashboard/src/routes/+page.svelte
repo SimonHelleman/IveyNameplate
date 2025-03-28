@@ -119,7 +119,7 @@
                 labels: dataArray.map(d => d.option),
                 datasets: [{
                     data: dataArray.map(d => d.count),
-                    backgroundColor: ["red", "green", "orange", "blue"]
+                    backgroundColor: ["red", "blue", "orange", "green"]
                 }]
             },
             options: {
