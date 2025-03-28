@@ -8,6 +8,8 @@
     let thumbsUp = 0;
     let thumbsDown = 0;
 
+    let pollOptions = "4";
+
     let chart;
 
     let studentsInClass = [];
@@ -45,10 +47,31 @@
         setAnonymousMode(anonymousMode);
     }
 
+    function handlePollOptionsChange(event) {
+        pollOptions = event.target.value;
+    }
+
     async function onClear(event) {
         console.log("onClear()");
         const resp = await fetch(`/nameplate/clearreact`, { method: "GET" });
         if (!resp.ok) throw new Error(`Error clearing reactions! Status: ${resp.status}`);
+    }
+
+    async function onStartPoll(event) {
+        const url = `/nameplate/startpoll?num_options=${pollOptions}`;
+        const resp = await fetch(url, { method: "GET" });
+        if (!resp.ok) throw new Error(`Error starting poll! Status: ${resp.status}`);
+    }
+
+    async function onEndPoll(event) {
+        const resp = await fetch("/nameplate/endpoll", { method: "GET" });
+        if (!resp.ok) throw new Error(`Error ending poll! Status: ${resp.status}`);
+    }
+
+    async function fetchData() {
+        setInterval(()=> {
+
+        }, 2000);
     }
 
     onMount(async () => {
@@ -193,11 +216,12 @@
             <option value="on">On</option>
         </select>
     </label>
-    <label>Font Size:
-        <select>
-            <option value="small">Small</option>
-            <option value="medium" selected>Medium</option>
-            <option value="big">Big</option>
+    <label>Poll Options:
+        <select value={pollOptions} on:change={handlePollOptionsChange}>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
         </select>
     </label>
 </div>
@@ -248,5 +272,6 @@
 
 <div class="footer">
     <button on:click={onClear}>Clear</button>
-    <button on:click={() => console.log("Help button clicked")}>Help</button>
+    <button on:click={onStartPoll}>Start Poll</button>
+    <button on:click={onEndPoll}>End Poll</button>
 </div>
