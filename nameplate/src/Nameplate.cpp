@@ -342,7 +342,7 @@ void Nameplate::CreateStudentLastNamePeriodic()
 
     m_rearDisplay->DrawText(100, 50, 20, BLACK32, "Last Name:");
 
-    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, m_rearDisplay->Height() / 2, 20, BLACK32, m_keyboard.Text());
+    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, (m_rearDisplay->Height() / 2) - 30, 20, BLACK32, m_keyboard.Text());
 
     const float buttonX = m_rearDisplay->Width() - BUTTON_WIDTH - 10;
     const float buttonY = m_rearDisplay->Height() - BUTTON_HEIGHT - 10;
@@ -379,7 +379,7 @@ void Nameplate::CreateStudentFirstNamePeriodic()
 
     m_rearDisplay->DrawText(100, 50, 20, BLACK32, "First Name:");
 
-    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, m_rearDisplay->Height() / 2, 20, BLACK32, m_keyboard.Text());
+    m_rearDisplay->DrawText(m_rearDisplay->Width() / 2, (m_rearDisplay->Height() / 2) - 30, 20, BLACK32, m_keyboard.Text());
 
     const float buttonX = m_rearDisplay->Width() - BUTTON_WIDTH - 10;
     const float buttonY = m_rearDisplay->Height() - BUTTON_HEIGHT - 10;
